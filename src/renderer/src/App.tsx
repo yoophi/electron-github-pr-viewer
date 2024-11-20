@@ -1,7 +1,13 @@
 import { Root } from '@/app/router'
+import { Toaster } from '@/shared/ui/toaster'
 
 function App(): JSX.Element {
-  return <Root />
+  return (
+    <>
+      <Root />
+      <Toaster />
+    </>
+  )
 }
 
 // <>

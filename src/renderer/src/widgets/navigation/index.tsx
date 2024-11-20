@@ -7,7 +7,7 @@ import {
   navigationMenuTriggerStyle
 } from '@/shared/ui/navigation-menu'
 
-import { cn } from '@/lib/utils'
+import { cn } from '@/shared/lib/utils'
 
 import { Link } from 'react-router-dom'
 
