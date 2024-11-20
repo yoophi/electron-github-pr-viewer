@@ -1,11 +1,11 @@
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuList,
   navigationMenuTriggerStyle
-} from '@/components/ui/navigation-menu'
+} from '@/shared/ui/navigation-menu'
 
 import { cn } from '@/lib/utils'
 
