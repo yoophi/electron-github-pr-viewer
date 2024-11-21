@@ -1,5 +1,3 @@
-import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -11,7 +9,7 @@ import { cn } from '@/shared/lib/utils'
 
 import { Link } from 'react-router-dom'
 
-export function Navigation() {
+export function Navigation(): JSX.Element {
   return (
     <div className="z-50 flex flex-row justify-between px-4 py-2">
       <div className="flex-initial ">

@@ -1,7 +1,17 @@
+import fs from 'fs'
+import path from 'path'
+import os from 'os'
 import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
+
+const settingFileName = 'gh-pr-viewer.json'
+
+function getSettingPath() {
+  const homeDir = os.homedir()
+  return path.join(homeDir, settingFileName)
+}
 
 function createWindow(): void {
   // Create the browser window.
@@ -51,6 +61,35 @@ app.whenReady().then(() => {
 
   // IPC test
   ipcMain.on('ping', () => console.log('pong'))
+  ipcMain.handle('get-settings', () => {
+    const settingsPath = getSettingPath()
+    const defaultSetting = {
+      accessToken: '',
+      repositories: []
+    }
+
+    try {
+      const data = fs.readFileSync(settingsPath, 'utf-8')
+      return { error: false, data: JSON.parse(data) }
+    } catch (err) {
+      const message = `failed to read ${settingsPath}`
+      if (err instanceof Error) {
+        return { error: true, message: `${message}: ${err.message}`, data: defaultSetting }
+      }
+      return { error: true, message: `${message}: unknown error`, data: defaultSetting }
+    }
+  })
+  ipcMain.handle('write-settings', (_, data) => {
+    const settingsPath = getSettingPath()
+    const userSetting = {
+      accessToken: data.accessToken,
+      repositories: data.repositories.split(/\s+/).filter(Boolean)
+    }
+
+    fs.writeFileSync(settingsPath, JSON.stringify(userSetting, null, 2), 'utf-8')
+
+    return { error: false, message: 'ok' }
+  })
 
   createWindow()
 
