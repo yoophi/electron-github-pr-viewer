@@ -1,9 +1,8 @@
+import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import { app, BrowserWindow, ipcMain, shell } from 'electron'
 import fs from 'fs'
-import path from 'path'
 import os from 'os'
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
-import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
+import path, { join } from 'path'
 import icon from '../../resources/icon.png?asset'
 
 const settingFileName = 'gh-pr-viewer.json'
@@ -89,6 +88,29 @@ app.whenReady().then(() => {
     fs.writeFileSync(settingsPath, JSON.stringify(userSetting, null, 2), 'utf-8')
 
     return { error: false, message: 'ok' }
+  })
+  ipcMain.handle('get-repositories', async (_, accessToken) => {
+    const { Octokit } = await import('octokit')
+    const octokit = new Octokit({ auth: accessToken })
+    // const iterator = octokit.paginate.iterator(octokit.request('GET /orgs/{org}/repos'), {
+    const iterator = octokit.paginate.iterator(octokit.rest.repos.listForOrg, {
+      org: 'payhereinc',
+      per_page: 100,
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
+    })
+
+    const result = []
+    for await (const { data: repos } of iterator) {
+      for (const repo of repos) {
+        console.log(repo.full_name)
+        result.push(repo)
+      }
+    }
+
+    // return resp
+    return { data: result }
   })
 
   createWindow()

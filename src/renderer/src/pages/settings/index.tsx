@@ -18,7 +18,7 @@ import {
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 import { useEffect, useState } from 'react'
-import type { Setting } from './model'
+import { useSettingStore, type Setting } from './model'
 import type { IPCResponse } from '@/shared/model'
 import { Alert, AlertTitle, AlertDescription } from '@/shared/ui/alert'
 import { AlertCircle } from 'lucide-react'
@@ -33,6 +33,7 @@ const FormSchema = z.object({
 })
 
 export function SettingsForm({ defaultValues }: { defaultValues: Setting }): JSX.Element {
+  const { setSettings } = useSettingStore((state) => state)
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues
@@ -41,6 +42,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: Setting }): JSX
   async function onSubmit(data: z.infer<typeof FormSchema>): Promise<void> {
     try {
       const resp = (await window.api.writeSettings(data)) as IPCResponse<{ null }>
+      setSettings({ accessToken: data.accessToken, repositories: data.repositories.split(/\s+/) })
       toast({
         title: resp.message,
         description: (
@@ -129,10 +131,10 @@ export const SettingsPage = () => {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-4">Settings</h1>
+      <h1 className="mb-4 text-xl font-bold">Settings</h1>
       {errorMessage && (
         <Alert variant="destructive">
-          <AlertCircle className="h-4 w-4" />
+          <AlertCircle className="w-4 h-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{errorMessage}</AlertDescription>
         </Alert>

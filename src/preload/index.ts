@@ -4,7 +4,8 @@ import { electronAPI } from '@electron-toolkit/preload'
 // Custom APIs for renderer
 const api = {
   getSettings: (command) => ipcRenderer.invoke('get-settings', command),
-  writeSettings: (command) => ipcRenderer.invoke('write-settings', command)
+  writeSettings: (command) => ipcRenderer.invoke('write-settings', command),
+  getRepositories: (command) => ipcRenderer.invoke('get-repositories', command)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
