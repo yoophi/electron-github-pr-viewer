@@ -1,20 +1,33 @@
-import { useEffect, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useSettingStore } from '../settings/model'
 
 export const RepositoriesPage = () => {
   const { setting } = useSettingStore((state) => state)
-  const [repositories, setRepositories] = useState<any[]>()
 
   if (!setting?.accessToken) {
     return <div>access_token not found</div>
   }
 
-  useEffect(() => {
-    window.api.getRepositories(setting?.accessToken).then((resp) => {
-      const { data } = resp
-      setRepositories(data)
-    })
-  }, [])
+  const {
+    data: repositories,
+    isLoading,
+    isError,
+    error
+  } = useQuery({
+    queryKey: ['repositories'],
+    queryFn: async () => {
+      const { data } = await window.api.getRepositories(setting.accessToken)
+      return data
+    }
+  })
+
+  if (isLoading) {
+    return <div>loading...</div>
+  }
+
+  if (isError) {
+    return <div>{error?.message}</div>
+  }
 
   return (
     <div>
