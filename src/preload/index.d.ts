@@ -9,6 +9,7 @@ declare global {
       getSettings: () => Promise<IPCResponse<{ accessToken: string; repositories: string[] }>>
       writeSettings: (data: Setting) => Promise<IPCResponse<{ null }>>
       getRepositories: (accessToken: string) => Promise<IPCResponse<any>>
+      getPullRequests: (accessToken: string, repository: string) => Promise<IPCResponse<any>>
     }
   }
 }

@@ -92,7 +92,6 @@ app.whenReady().then(() => {
   ipcMain.handle('get-repositories', async (_, accessToken) => {
     const { Octokit } = await import('octokit')
     const octokit = new Octokit({ auth: accessToken })
-    // const iterator = octokit.paginate.iterator(octokit.request('GET /orgs/{org}/repos'), {
     const iterator = octokit.paginate.iterator(octokit.rest.repos.listForOrg, {
       org: 'payhereinc',
       per_page: 100,
@@ -101,16 +100,41 @@ app.whenReady().then(() => {
       }
     })
 
-    const result = []
+    const result: any[] = []
     for await (const { data: repos } of iterator) {
       for (const repo of repos) {
-        console.log(repo.full_name)
         result.push(repo)
       }
     }
 
-    // return resp
     return { data: result }
+  })
+  ipcMain.handle('get-pull-requests', async (_, { accessToken, repository }) => {
+    try {
+      const { Octokit } = await import('octokit')
+      const octokit = new Octokit({ auth: accessToken })
+      const [owner, repo] = repository.split('/')
+      const iterator = octokit.paginate.iterator(octokit.rest.pulls.list, {
+        owner,
+        repo,
+        per_page: 100,
+        headers: {
+          'X-GitHub-Api-Version': '2022-11-28'
+        }
+      })
+
+      const result: any[] = []
+      for await (const { data: pulls } of iterator) {
+        for (const pull of pulls) {
+          console.log(pull)
+          result.push(pull)
+        }
+      }
+
+      return { data: result }
+    } catch (err) {
+      console.error(err)
+    }
   })
 
   createWindow()

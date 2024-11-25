@@ -5,7 +5,10 @@ import { electronAPI } from '@electron-toolkit/preload'
 const api = {
   getSettings: (command) => ipcRenderer.invoke('get-settings', command),
   writeSettings: (command) => ipcRenderer.invoke('write-settings', command),
-  getRepositories: (command) => ipcRenderer.invoke('get-repositories', command)
+  getRepositories: (command) => ipcRenderer.invoke('get-repositories', command),
+  getPullRequests: (command) => {
+    return ipcRenderer.invoke('get-pull-requests', command)
+  }
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
