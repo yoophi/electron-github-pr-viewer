@@ -18,7 +18,9 @@ export const RepositoriesPage = () => {
     queryFn: async () => {
       const { data } = await window.api.getRepositories(setting.accessToken)
       return data
-    }
+    },
+    staleTime: 1000 * 60 * 10, // 10분 동안 데이터를 신선한 상태로 유지
+    gcTime: 1000 * 60 * 60 // 1시간 동안 캐시 유지
   })
 
   if (isLoading) {
