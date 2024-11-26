@@ -1,7 +1,10 @@
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren } from 'react'
 
-import { QueryClient, QueryClientProvider as TanStackQueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import {
+  QueryClient,
+  QueryClientProvider as TanStackQueryClientProvider
+} from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -10,13 +13,13 @@ const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
       refetchOnMount: true,
       staleTime: 1000,
-      gcTime: 1000,
+      gcTime: 1000
     },
     mutations: {
-      retry: 0,
-    },
-  },
-});
+      retry: 0
+    }
+  }
+})
 
 export const QueryClientProvider = ({ children }: PropsWithChildren) => {
   return (
@@ -24,5 +27,5 @@ export const QueryClientProvider = ({ children }: PropsWithChildren) => {
       {children}
       <ReactQueryDevtools initialIsOpen={false} />
     </TanStackQueryClientProvider>
-  );
-};
+  )
+}

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
-import { SettingData } from './setting'
+import { SettingData } from '../model/setting'
 
 type State = {
   setting?: SettingData

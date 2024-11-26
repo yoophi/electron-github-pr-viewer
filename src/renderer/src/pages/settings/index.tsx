@@ -18,7 +18,7 @@ import {
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 import { useEffect, useState } from 'react'
-import { useSettingStore, type Setting } from './model'
+import { useSettingStore, type Setting } from '@/entities/settings'
 import type { IPCResponse } from '@/shared/model'
 import { Alert, AlertTitle, AlertDescription } from '@/shared/ui/alert'
 import { AlertCircle } from 'lucide-react'

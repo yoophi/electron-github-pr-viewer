@@ -1,6 +1,6 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import type { Setting } from '../renderer/src/pages/settings/model'
-import type { IPCResponse } from '../renderer/src/shared/model'
+import type { Setting } from '@/entities/setting'
+import type { IPCResponse } from '@/shared/model'
 
 declare global {
   interface Window {
@@ -9,7 +9,13 @@ declare global {
       getSettings: () => Promise<IPCResponse<{ accessToken: string; repositories: string[] }>>
       writeSettings: (data: Setting) => Promise<IPCResponse<{ null }>>
       getRepositories: (accessToken: string) => Promise<IPCResponse<any>>
-      getPullRequests: (accessToken: string, repository: string) => Promise<IPCResponse<any>>
+      getPullRequests: (args: {
+        accessToken: string
+        repository: string
+        params?: {
+          state?: 'all' | 'open' | 'closed'
+        }
+      }) => Promise<IPCResponse<any>>
     }
   }
 }

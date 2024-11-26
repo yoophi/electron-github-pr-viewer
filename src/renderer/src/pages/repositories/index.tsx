@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useSettingStore } from '../settings/model'
+import { useSettingStore } from '@/entities/settings'
 
 export const RepositoriesPage = () => {
   const { setting } = useSettingStore((state) => state)
@@ -45,6 +45,13 @@ export const RepositoriesPage = () => {
                 <pre className="font-sm">{JSON.stringify({ full_name, topics }, null, 2)} </pre>
               </div>
             )
+          })}
+      {repositories &&
+        repositories
+          .filter((repo) => repo.topics.includes('frontend'))
+          .map((repo, index) => {
+            const { full_name, topics } = repo
+            return <pre>{full_name}</pre>
           })}
     </div>
   )

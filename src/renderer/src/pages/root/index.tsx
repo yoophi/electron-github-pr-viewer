@@ -2,7 +2,7 @@ import { IPCResponse } from '@/shared/model'
 import { Navigation } from '@/widgets/navigation'
 import { useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
-import { SettingData, useSettingStore } from '../settings/model'
+import { SettingData, useSettingStore } from '@/entities/settings'
 
 export function RootPage() {
   const { setSettings } = useSettingStore((state) => state)

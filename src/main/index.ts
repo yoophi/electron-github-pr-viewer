@@ -4,10 +4,11 @@ import fs from 'fs'
 import os from 'os'
 import path, { join } from 'path'
 import icon from '../../resources/icon.png?asset'
+import dayjs from 'dayjs'
 
 const settingFileName = 'gh-pr-viewer.json'
 
-function getSettingPath() {
+function getSettingPath(): string {
   const homeDir = os.homedir()
   return path.join(homeDir, settingFileName)
 }
@@ -109,31 +110,47 @@ app.whenReady().then(() => {
 
     return { data: result }
   })
-  ipcMain.handle('get-pull-requests', async (_, { accessToken, repository }) => {
+  ipcMain.handle('get-pull-requests', async (_, { accessToken, repository, params }) => {
     try {
       const { Octokit } = await import('octokit')
       const octokit = new Octokit({ auth: accessToken })
       const [owner, repo] = repository.split('/')
-      const iterator = octokit.paginate.iterator(octokit.rest.pulls.list, {
+      const options: Record<string, any> = {
         owner,
         repo,
         per_page: 100,
+        sort: 'created',
+        direction: 'desc',
         headers: {
           'X-GitHub-Api-Version': '2022-11-28'
         }
-      })
+      }
+      if (params?.state) {
+        options.state = params.state
+      }
+      const iterator = octokit.paginate.iterator(octokit.rest.pulls.list, options)
 
       const result: any[] = []
-      for await (const { data: pulls } of iterator) {
+      const oneMonthAgo = dayjs().subtract(1, 'month')
+      outer: for await (const { data: pulls } of iterator) {
         for (const pull of pulls) {
-          console.log(pull)
+          const pullCreatedAt = dayjs(pull.created_at)
+          console.log(pull.created_at)
+          if (pullCreatedAt.isBefore(oneMonthAgo)) {
+            console.log(pullCreatedAt, 'is one month ago')
+            break outer
+          }
           result.push(pull)
         }
       }
 
       return { data: result }
     } catch (err) {
-      console.error(err)
+      const message = `failed to get pull requests}`
+      if (err instanceof Error) {
+        return { error: true, message: `${message}: ${err.message}`, data: [] }
+      }
+      return { error: true, message: `${message}: unknown error`, data: [] }
     }
   })
 
