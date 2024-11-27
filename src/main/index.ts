@@ -131,13 +131,11 @@ app.whenReady().then(() => {
       const iterator = octokit.paginate.iterator(octokit.rest.pulls.list, options)
 
       const result: any[] = []
-      const oneMonthAgo = dayjs().subtract(1, 'month')
+      const oneYearAgo = dayjs().subtract(1, 'year')
       outer: for await (const { data: pulls } of iterator) {
         for (const pull of pulls) {
           const pullCreatedAt = dayjs(pull.created_at)
-          console.log(pull.created_at)
-          if (pullCreatedAt.isBefore(oneMonthAgo)) {
-            console.log(pullCreatedAt, 'is one month ago')
+          if (pullCreatedAt.isBefore(oneYearAgo)) {
             break outer
           }
           result.push(pull)

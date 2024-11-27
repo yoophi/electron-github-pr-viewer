@@ -3,6 +3,8 @@ import { useQueries } from '@tanstack/react-query'
 import { useSettingStore } from '@/entities/settings'
 import { cn } from '@/shared/lib/utils'
 import { RecordType } from 'zod'
+import { Cal } from '@/shared/ui/cal-heatmap'
+import dayjs from 'dayjs'
 
 export const PullRequestsAllPage = () => {
   const { setting } = useSettingStore((state) => state)
@@ -63,11 +65,34 @@ export const PullRequestsAllPage = () => {
       (respositoryPullRequestsCount.get(pull.base.repo.full_name) || 0) + 1
     )
   })
-  console.log(respositoryPullRequestsCount.keys())
+
+  const pullRequestsCount = new Map()
+  filteredPullRequests
+    .filter((repo) => (repositoryFilter ? repo.base.repo.full_name === repositoryFilter : true))
+    .forEach((pull) => {
+      const pullRequestCreatedDate = dayjs(pull.created_at).format('YYYY-MM-DDT00:00:00')
+      pullRequestsCount.set(
+        pullRequestCreatedDate,
+        (pullRequestsCount.get(pullRequestCreatedDate) || 0) + 1
+      )
+    })
+
+  const heatmapData = [...pullRequestsCount.keys()].map((key) => ({
+    date: key,
+    value: pullRequestsCount.get(key)
+  }))
+
+  const contributers = filteredPullRequests
+    .filter((repo) => (repositoryFilter ? repo.base.repo.full_name === repositoryFilter : true))
+    .reduce((prev, curr) => {
+      const username = curr.user.login
+      return { ...prev, [username]: (prev[username] || 0) + 1 }
+    }, {})
 
   return (
     <div>
       <h1 className="mb-4 text-3xl font-bold">All</h1>
+      <Cal foo="some- text" data={heatmapData} />
       <div className="mb-4">
         {Object.keys(users).map((username) => (
           <button
@@ -100,6 +125,17 @@ export const PullRequestsAllPage = () => {
           </li>
         ))}
       </ul>
+      {repositoryFilter && <h3 className="my-4 text-xl font-bold">{repositoryFilter}</h3>}
+
+      {!userFilter && repositoryFilter && (
+        <ul>
+          {Object.keys(contributers).map((username) => (
+            <li key={username}>
+              {username}: {contributers[username]}
+            </li>
+          ))}
+        </ul>
+      )}
       <div>
         {[...filteredPullRequests]
           .filter((repo) =>
