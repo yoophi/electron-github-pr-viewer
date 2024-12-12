@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useSettingStore } from '@/entities/settings'
+import { RepositoriesList } from '@/entities/repositories'
 
 export const RepositoriesPage = () => {
   const { setting } = useSettingStore((state) => state)
@@ -34,6 +35,8 @@ export const RepositoriesPage = () => {
   return (
     <div>
       <h1 className="mb-8 text-3xl font-bold">Repositories</h1>
+
+      <RepositoriesList data={repositories.filter((repo) => repo.topics.includes('frontend'))} />
       {repositories &&
         repositories
           .filter((repo) => repo.topics.includes('frontend'))
