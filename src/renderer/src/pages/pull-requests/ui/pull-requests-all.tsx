@@ -5,6 +5,7 @@ import { cn } from '@/shared/lib/utils'
 import { RecordType } from 'zod'
 import { Cal } from '@/shared/ui/cal-heatmap'
 import dayjs from 'dayjs'
+import { RepoHeatmap } from '@/shared/ui/repo-heatmap'
 
 export const PullRequestsAllPage = () => {
   const { setting } = useSettingStore((state) => state)
@@ -120,8 +121,17 @@ export const PullRequestsAllPage = () => {
       <ul>
         {[...respositoryPullRequestsCount.keys()].map((repo) => (
           <li key={repo} className="mr-2">
-            <button onClick={() => setRepositoryFilter(repo)}>{repo}</button> (
-            {respositoryPullRequestsCount.get(repo)})
+            <div>
+              <button onClick={() => setRepositoryFilter(repo)}>{repo}</button> (
+              {respositoryPullRequestsCount.get(repo)})
+            </div>
+            <div>
+              <RepoHeatmap
+                data={pullRequests}
+                repository={repo}
+                userIds={userFilter ? [userFilter] : []}
+              />
+            </div>
           </li>
         ))}
       </ul>

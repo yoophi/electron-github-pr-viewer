@@ -4,6 +4,8 @@ import { SettingData } from '../model/setting'
 
 type State = {
   setting?: SettingData
+  // memberMap
+  // groups
 }
 
 type Actions = {
@@ -17,6 +19,24 @@ export const useSettingStore = create<State & Actions>()(
     (set) => ({
       ...initialState,
       setSettings: (setting: SettingData): void => {
+        const idMember = [
+          ...setting.members.map((member) => {
+            const { name, ids } = member
+            return ids.map((id) => {
+              return {
+                id,
+                name
+              }
+            })
+          })
+        ]
+        // const xx = idMember.reduce((prev, curr) => {
+        //   return {
+        //     ...prev,
+        //     [curr.id]: curr
+        //   }
+        // }, {})
+
         set({ setting })
       }
     }),

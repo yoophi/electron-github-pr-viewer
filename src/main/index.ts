@@ -65,7 +65,8 @@ app.whenReady().then(() => {
     const settingsPath = getSettingPath()
     const defaultSetting = {
       accessToken: '',
-      repositories: []
+      repositories: [],
+      members: [],
     }
 
     try {

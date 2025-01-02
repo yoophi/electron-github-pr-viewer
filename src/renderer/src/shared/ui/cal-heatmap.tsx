@@ -1,6 +1,6 @@
 import CalHeatmap from 'cal-heatmap'
-import { useRef, useEffect } from 'react'
 import 'cal-heatmap/cal-heatmap.css'
+import { useEffect, useRef } from 'react'
 
 type CalProps = {
   foo: string
@@ -11,18 +11,23 @@ type CalProps = {
 }
 export function Cal({ data }: CalProps) {
   const calRef = useRef<HTMLDivElement>()
+  const calHeatmapRef = useRef<any>()
 
   useEffect(() => {
     ;(async () => {
       if (!calRef.current) {
         return
       }
-      calRef.current.innerHTML = ''
+      if (calHeatmapRef.current) {
+        calRef.current.innerHTML = ''
+      }
 
       const cal = new CalHeatmap()
-      cal.paint(
+      await cal.paint(
         {
           itemSelector: calRef.current,
+          animationDuration: 0,
+          // itemSelector: `#${calItemId}`,
           theme: 'light',
           date: { start: new Date('2024-01-01') },
           data: {
@@ -45,6 +50,16 @@ export function Cal({ data }: CalProps) {
         },
         []
       )
+      calHeatmapRef.current = cal
+
+      const chElements = calRef.current.querySelectorAll('svg.ch-container')
+      Array.from(chElements).forEach((svg, index) => {
+        if (index > 0) {
+          svg.remove()
+        }
+      })
+
+      return
     })()
   }, [data])
 
