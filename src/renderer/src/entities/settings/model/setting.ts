@@ -1,6 +1,7 @@
 export type Member = {
   name: string
   ids: number[]
+  groups: string[]
 }
 
 export type Setting = {

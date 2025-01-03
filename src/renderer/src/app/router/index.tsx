@@ -1,5 +1,5 @@
 import { HomePage } from '@/pages/home'
-import { MembersPage } from '@/pages/members'
+import { MembersAllPage, MembersDetailPage, MembersContainerPage } from '@/pages/members'
 import {
   PullRequestsAllPage,
   PullRequestsContainerPage,
@@ -23,7 +23,11 @@ export function Root(): JSX.Element {
             <Route path="group-by-repository" element={<PullRequestsGroupByRepositoryPage />} />
           </Route>
           <Route path="repositories" element={<RepositoriesPage />} />
-          <Route path="members" element={<MembersPage />} />
+          <Route path="members" element={<MembersContainerPage />}>
+            <Route index element={<Navigate to="all" replace />} />
+            <Route path="all" element={<MembersAllPage />} />
+            <Route path=":memberId" element={<MembersDetailPage />} />
+          </Route>
           <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>

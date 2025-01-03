@@ -33,7 +33,7 @@ const columns = [
             return (
               <Badge
                 key={topic}
-                className="mr-1"
+                className={{ 'mr-1': true, 'bg-white': topic !== 'deprecated' }}
                 variant={topic === 'deprecated' ? 'secondary' : 'outline'}
               >
                 {topic}
@@ -77,7 +77,9 @@ export const RepositoriesList = ({ data }: RepositoriesListProps) => {
 
   return (
     <div className="p-2">
-      {/* {data && <pre>{JSON.stringify(data[0], null, 2)}</pre>} */}
+      <button onClick={() => rerender()} className="p-2 border">
+        Rerender
+      </button>
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -112,24 +114,8 @@ export const RepositoriesList = ({ data }: RepositoriesListProps) => {
             )
           })}
         </TableBody>
-        <tfoot>
-          {table.getFooterGroups().map((footerGroup) => (
-            <tr key={footerGroup.id}>
-              {footerGroup.headers.map((header) => (
-                <th key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(header.column.columnDef.footer, header.getContext())}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </tfoot>
       </Table>
       <div className="h-4" />
-      <button onClick={() => rerender()} className="p-2 border">
-        Rerender
-      </button>
     </div>
   )
 }

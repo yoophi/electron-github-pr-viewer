@@ -2,7 +2,7 @@ import { SettingData } from '@/entities/settings'
 import { IPCResponse } from '@/shared/model'
 import { useEffect, useState } from 'react'
 
-export const MembersPage = () => {
+export const MembersAllPage = () => {
   const [settings, setSettings] = useState<SettingData | null>()
   const [errorMessage, setErrorMessage] = useState<string>()
 
@@ -32,22 +32,12 @@ export const MembersPage = () => {
         return { ...prev, [curr.id]: curr }
       }, {})
       console.log({ x })
-      // const x = [
-      //   ...idMap.map((member) => {
-      //     const { ids, name } = member
-      //     return ids.map((id) => {
-      //       return {
-      //         id,
-      //         name
-      //       }
-      //     })
-      //   })
-      // ]
     })()
   }, [])
   return (
     <>
       <div>MembersPage</div>
+      {errorMessage && <pre>ERROR: {errorMessage}</pre>}
       <pre>{settings && JSON.stringify(settings.members, null, 2)}</pre>
     </>
   )

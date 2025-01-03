@@ -1,14 +1,18 @@
-import { useState } from 'react'
-import { useQueries } from '@tanstack/react-query'
 import { useSettingStore } from '@/entities/settings'
 import { cn } from '@/shared/lib/utils'
-import { RecordType } from 'zod'
 import { Cal } from '@/shared/ui/cal-heatmap'
-import dayjs from 'dayjs'
 import { RepoHeatmap } from '@/shared/ui/repo-heatmap'
+import { useQueries } from '@tanstack/react-query'
+import dayjs from 'dayjs'
+import { useState } from 'react'
+import { RecordType } from 'zod'
+
+import { Badge } from '@/shared/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 
 export const PullRequestsAllPage = () => {
-  const { setting } = useSettingStore((state) => state)
+  const { setting, members, memberIdMap } = useSettingStore((state) => state)
   const [userFilter, setUserFilter] = useState<string | null>()
   const [repositoryFilter, setRepositoryFilter] = useState<string | null>()
 
@@ -92,20 +96,34 @@ export const PullRequestsAllPage = () => {
 
   return (
     <div>
+      <pre>{JSON.stringify({ members, memberIdMap }, null, 2)}</pre>
       <h1 className="mb-4 text-3xl font-bold">All</h1>
-      <Cal foo="some- text" data={heatmapData} />
+      <div className="flex flex-wrap">
+        <Card className="mb-2 mr-2">
+          <CardHeader>
+            <CardTitle>All Repositories</CardTitle>
+            <CardDescription>TOTAL PULL Requests: {filteredPullRequests.length}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div>
+              <Cal foo="some- text" data={heatmapData} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
       <div className="mb-4">
         {Object.keys(users).map((username) => (
-          <button
+          <Badge
             key={username}
-            className="mr-2"
+            variant="outline"
+            className="mr-1"
             onClick={() => {
               setUserFilter(username)
               setRepositoryFilter(null)
             }}
           >
             @{username} ({users[username]['open'] || 0}/{users[username]['closed'] || 0})
-          </button>
+          </Badge>
         ))}
         <button
           className="mr-4"
@@ -118,55 +136,72 @@ export const PullRequestsAllPage = () => {
         </button>
       </div>
       <div>TOTAL: {filteredPullRequests.length}</div>
-      <ul>
-        {[...respositoryPullRequestsCount.keys()].map((repo) => (
-          <li key={repo} className="mr-2">
-            <div>
-              <button onClick={() => setRepositoryFilter(repo)}>{repo}</button> (
-              {respositoryPullRequestsCount.get(repo)})
-            </div>
-            <div>
-              <RepoHeatmap
-                data={pullRequests}
-                repository={repo}
-                userIds={userFilter ? [userFilter] : []}
-              />
-            </div>
-          </li>
-        ))}
-      </ul>
-      {repositoryFilter && <h3 className="my-4 text-xl font-bold">{repositoryFilter}</h3>}
+      <Tabs defaultValue="repositories" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="repositories">Repositories</TabsTrigger>
+          <TabsTrigger value="pull-requests">Pull Requests</TabsTrigger>
+        </TabsList>
+        <TabsContent value="repositories">
+          <div className="flex flex-wrap">
+            {[...respositoryPullRequestsCount.keys()].map((repo) => (
+              <Card key={repo} className="mb-2 mr-2">
+                <CardHeader>
+                  <CardTitle>
+                    <button onClick={() => setRepositoryFilter(repo)}>{repo}</button>
+                  </CardTitle>
+                  <CardDescription>
+                    PULL Requests: ({respositoryPullRequestsCount.get(repo)})
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div>
+                    <RepoHeatmap
+                      data={pullRequests}
+                      repository={repo}
+                      userIds={userFilter ? [userFilter] : []}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          {repositoryFilter && <h3 className="my-4 text-xl font-bold">{repositoryFilter}</h3>}
 
-      {!userFilter && repositoryFilter && (
-        <ul>
-          {Object.keys(contributers).map((username) => (
-            <li key={username}>
-              {username}: {contributers[username]}
-            </li>
-          ))}
-        </ul>
-      )}
-      <div>
-        {[...filteredPullRequests]
-          .filter((repo) =>
-            repositoryFilter ? repo.base.repo.full_name === repositoryFilter : true
-          )
-          .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
-          .map((pull) => (
-            <div
-              className={cn('p-4 border', { 'bg-slate-200': pull.state === 'closed' })}
-              key={pull.id}
-            >
-              <div>
-                {pull.base.repo.full_name} - {pull.base.ref}
-              </div>
-              <div className="text-lg font-bold">{pull.title}</div>
-              <div>{pull.user.login}</div>
-              <div>{pull.created_at}</div>
-              <div>state: {pull.state}</div>
-            </div>
-          ))}
-      </div>
+          {!userFilter && repositoryFilter && (
+            <ul>
+              {Object.keys(contributers).map((username) => (
+                <li key={username}>
+                  {username}: {contributers[username]}
+                </li>
+              ))}
+            </ul>
+          )}
+        </TabsContent>
+        <TabsContent value="pull-requests">
+          <div>
+            {[...filteredPullRequests]
+              .filter((repo) =>
+                repositoryFilter ? repo.base.repo.full_name === repositoryFilter : true
+              )
+              .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
+              .map((pull) => (
+                <div
+                  className={cn('p-4 border', { 'bg-slate-200': pull.state === 'closed' })}
+                  key={pull.id}
+                >
+                  <div>
+                    {pull.base.repo.full_name} - {pull.base.ref}
+                  </div>
+                  <div className="text-lg font-bold">{pull.title}</div>
+                  <div>{pull.user.login}</div>
+                  <div>{pull.user.id}</div>
+                  <div>{pull.created_at}</div>
+                  <div>state: {pull.state}</div>
+                </div>
+              ))}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
