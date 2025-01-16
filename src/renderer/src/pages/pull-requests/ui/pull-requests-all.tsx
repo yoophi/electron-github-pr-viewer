@@ -4,12 +4,16 @@ import { Cal } from '@/shared/ui/cal-heatmap'
 import { RepoHeatmap } from '@/shared/ui/repo-heatmap'
 import { useQueries } from '@tanstack/react-query'
 import dayjs from 'dayjs'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { RecordType } from 'zod'
 
 import { Badge } from '@/shared/ui/badge'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/shared/ui/chart'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Link } from 'lucide-react'
+import { Label, Pie, PieChart } from 'recharts'
 
 export const PullRequestsAllPage = () => {
   const { setting, members, memberIdMap } = useSettingStore((state) => state)
@@ -49,6 +53,7 @@ export const PullRequestsAllPage = () => {
   })
 
   const users: RecordType<string, any> = {}
+  const mmm = { ...members }
   pullRequests.forEach((pull) => {
     if (!users.hasOwnProperty(pull.user.login)) {
       users[pull.user.login] = {}
@@ -57,6 +62,17 @@ export const PullRequestsAllPage = () => {
       typeof users[pull.user.login][pull.state] === 'number'
         ? users[pull.user.login][pull.state] + 1
         : 1
+
+    // if (!members.hasOwnProperty(pull))
+    // if (!memberIdMap.hasOwnProperty(pull.user.id)) {
+    //   console.log(pull.user.id)
+    //   memberIdMap[pull.user.id] = { name: pull.user.login, ids: [pull.user.id], groups: [] }
+    //   mmm[pull.user.login] = { name: pull.user.login, ids: [pull.user.id], groups: [] }
+    // }
+    // memberIdMap[pull.user.id][pull.state] =
+    //   typeof memberIdMap[pull.user.id][pull.state] === 'number'
+    //     ? memberIdMap[pull.user.id][pull.state] + 1
+    //     : 1
   })
 
   const filteredPullRequests = userFilter
@@ -94,9 +110,56 @@ export const PullRequestsAllPage = () => {
       return { ...prev, [username]: (prev[username] || 0) + 1 }
     }, {})
 
+  // chart
+
+  // const chartData = [
+  //   { browser: 'chrome', visitors: 275, fill: 'var(--color-chrome)' },
+  //   { browser: 'safari', visitors: 200, fill: 'var(--color-safari)' },
+  //   { browser: 'firefox', visitors: 287, fill: 'var(--color-firefox)' },
+  //   { browser: 'edge', visitors: 173, fill: 'var(--color-edge)' },
+  //   { browser: 'other', visitors: 190, fill: 'var(--color-other)' }
+  // ]
+
+  const chartData = Object.keys(contributers).map((username) => ({
+    browser: username,
+    visitors: contributers[username],
+    fill: `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`
+  }))
+
+  const chartConfig = {
+    visitors: {
+      label: 'Visitors'
+    },
+    chrome: {
+      label: 'Chrome',
+      color: 'hsl(var(--chart-1))'
+    },
+    safari: {
+      label: 'Safari',
+      color: 'hsl(var(--chart-2))'
+    },
+    firefox: {
+      label: 'Firefox',
+      color: 'hsl(var(--chart-3))'
+    },
+    edge: {
+      label: 'Edge',
+      color: 'hsl(var(--chart-4))'
+    },
+    other: {
+      label: 'Other',
+      color: 'hsl(var(--chart-5))'
+    }
+  } satisfies ChartConfig
+
+  const totalVisitors = useMemo(() => {
+    return chartData.reduce((acc, curr) => acc + curr.visitors, 0)
+  }, [chartData])
+
   return (
     <div>
-      <pre>{JSON.stringify({ members, memberIdMap }, null, 2)}</pre>
+      {/* <pre>{JSON.stringify({ members, memberIdMap }, null, 2)}</pre> */}
+      {/* <pre>{JSON.stringify({ mmm, memberIdMap }, null, 2)}</pre> */}
       <h1 className="mb-4 text-3xl font-bold">All</h1>
       <div className="flex flex-wrap">
         <Card className="mb-2 mr-2">
@@ -111,6 +174,15 @@ export const PullRequestsAllPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      <div className="mb-4">
+        {Object.keys(mmm).map((username) => (
+          <Badge key={username} variant="outline" className="mr-1" onClick={() => {}}>
+            {username}
+          </Badge>
+        ))}
+      </div>
+
       <div className="mb-4">
         {Object.keys(users).map((username) => (
           <Badge
@@ -125,17 +197,86 @@ export const PullRequestsAllPage = () => {
             @{username} ({users[username]['open'] || 0}/{users[username]['closed'] || 0})
           </Badge>
         ))}
-        <button
-          className="mr-4"
+      </div>
+      <div className="mb-4">
+        <Button
+          size="sm"
           onClick={() => {
             setUserFilter(null)
             setRepositoryFilter(null)
           }}
         >
           reset user filter
-        </button>
+        </Button>
       </div>
       <div>TOTAL: {filteredPullRequests.length}</div>
+
+      <ChartContainer config={chartConfig} className="aspect-square max-h-[250px]">
+        <PieChart>
+          <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+          <Pie
+            data={chartData}
+            dataKey="visitors"
+            nameKey="browser"
+            innerRadius={60}
+            strokeWidth={5}
+          >
+            <Label
+              content={({ viewBox }) => {
+                if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
+                  return (
+                    <text
+                      x={viewBox.cx}
+                      y={viewBox.cy}
+                      textAnchor="middle"
+                      dominantBaseline="middle"
+                    >
+                      <tspan
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        className="text-3xl font-bold fill-foreground"
+                      >
+                        {totalVisitors.toLocaleString()}
+                      </tspan>
+                      <tspan
+                        x={viewBox.cx}
+                        y={(viewBox.cy || 0) + 24}
+                        className="fill-muted-foreground"
+                      >
+                        Pull Requests
+                      </tspan>
+                    </text>
+                  )
+                }
+              }}
+            />
+          </Pie>
+        </PieChart>
+      </ChartContainer>
+
+      <div>
+        {repositoryFilter && (
+          <>
+            <h3 className="mt-4 text-xl font-bold">{repositoryFilter}</h3>
+            <div>
+              <Button size="sm" onClick={() => setRepositoryFilter(null)}>
+                reset
+              </Button>
+            </div>
+          </>
+        )}
+
+        {!userFilter && repositoryFilter && (
+          <ul>
+            {Object.keys(contributers).map((username) => (
+              <li key={username}>
+                {username}: {contributers[username]}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <Tabs defaultValue="repositories" className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="repositories">Repositories</TabsTrigger>
@@ -148,6 +289,14 @@ export const PullRequestsAllPage = () => {
                 <CardHeader>
                   <CardTitle>
                     <button onClick={() => setRepositoryFilter(repo)}>{repo}</button>
+                    <a
+                      href={`https://github.com/${repo}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-block ml-1"
+                    >
+                      <Link size={10} />
+                    </a>
                   </CardTitle>
                   <CardDescription>
                     PULL Requests: ({respositoryPullRequestsCount.get(repo)})
@@ -165,17 +314,6 @@ export const PullRequestsAllPage = () => {
               </Card>
             ))}
           </div>
-          {repositoryFilter && <h3 className="my-4 text-xl font-bold">{repositoryFilter}</h3>}
-
-          {!userFilter && repositoryFilter && (
-            <ul>
-              {Object.keys(contributers).map((username) => (
-                <li key={username}>
-                  {username}: {contributers[username]}
-                </li>
-              ))}
-            </ul>
-          )}
         </TabsContent>
         <TabsContent value="pull-requests">
           <div>
@@ -194,7 +332,6 @@ export const PullRequestsAllPage = () => {
                   </div>
                   <div className="text-lg font-bold">{pull.title}</div>
                   <div>{pull.user.login}</div>
-                  <div>{pull.user.id}</div>
                   <div>{pull.created_at}</div>
                   <div>state: {pull.state}</div>
                 </div>

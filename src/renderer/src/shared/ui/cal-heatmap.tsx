@@ -29,7 +29,7 @@ export function Cal({ data }: CalProps) {
           animationDuration: 0,
           // itemSelector: `#${calItemId}`,
           theme: 'light',
-          date: { start: new Date('2024-01-01') },
+          date: { start: new Date('2024-02-01') },
           data: {
             source: data,
             x: 'date',
