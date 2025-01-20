@@ -103,11 +103,18 @@ export const PullRequestsAllPage = () => {
     value: pullRequestsCount.get(key)
   }))
 
-  const contributers = filteredPullRequests
-    .filter((repo) => (repositoryFilter ? repo.base.repo.full_name === repositoryFilter : true))
+  const repositoryContributers = filteredPullRequests
+    .filter((pr) => (repositoryFilter ? pr.base.repo.full_name === repositoryFilter : true))
     .reduce((prev, curr) => {
       const username = curr.user.login
       return { ...prev, [username]: (prev[username] || 0) + 1 }
+    }, {})
+
+  const userRepositoryContributes = filteredPullRequests
+    .filter((pr) => (userFilter ? pr.user.login === userFilter : true))
+    .reduce((prev, curr) => {
+      const repository = curr.base.repo.full_name
+      return { ...prev, [repository]: (prev[repository] || 0) + 1 }
     }, {})
 
   // chart
@@ -120,41 +127,31 @@ export const PullRequestsAllPage = () => {
   //   { browser: 'other', visitors: 190, fill: 'var(--color-other)' }
   // ]
 
-  const chartData = Object.keys(contributers).map((username) => ({
+  const repoContributersChartData = Object.keys(repositoryContributers).map((username) => ({
     browser: username,
-    visitors: contributers[username],
+    visitors: repositoryContributers[username],
+    fill: `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`
+  }))
+
+  const userRepoContributesChartData = Object.keys(userRepositoryContributes).map((repository) => ({
+    browser: repository,
+    visitors: userRepositoryContributes[repository],
     fill: `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`
   }))
 
   const chartConfig = {
     visitors: {
       label: 'Visitors'
-    },
-    chrome: {
-      label: 'Chrome',
-      color: 'hsl(var(--chart-1))'
-    },
-    safari: {
-      label: 'Safari',
-      color: 'hsl(var(--chart-2))'
-    },
-    firefox: {
-      label: 'Firefox',
-      color: 'hsl(var(--chart-3))'
-    },
-    edge: {
-      label: 'Edge',
-      color: 'hsl(var(--chart-4))'
-    },
-    other: {
-      label: 'Other',
-      color: 'hsl(var(--chart-5))'
     }
   } satisfies ChartConfig
 
-  const totalVisitors = useMemo(() => {
-    return chartData.reduce((acc, curr) => acc + curr.visitors, 0)
-  }, [chartData])
+  const totalPullRequestCount = useMemo(() => {
+    return repoContributersChartData.reduce((acc, curr) => acc + curr.visitors, 0)
+  }, [repoContributersChartData])
+
+  const totalUserRepoContributesPullRequestCount = useMemo(() => {
+    return userRepoContributesChartData.reduce((acc, curr) => acc + curr.visitors, 0)
+  }, [userRepoContributesChartData])
 
   return (
     <div>
@@ -211,48 +208,93 @@ export const PullRequestsAllPage = () => {
       </div>
       <div>TOTAL: {filteredPullRequests.length}</div>
 
-      <ChartContainer config={chartConfig} className="aspect-square max-h-[250px]">
-        <PieChart>
-          <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-          <Pie
-            data={chartData}
-            dataKey="visitors"
-            nameKey="browser"
-            innerRadius={60}
-            strokeWidth={5}
-          >
-            <Label
-              content={({ viewBox }) => {
-                if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
-                  return (
-                    <text
-                      x={viewBox.cx}
-                      y={viewBox.cy}
-                      textAnchor="middle"
-                      dominantBaseline="middle"
-                    >
-                      <tspan
+      {userFilter ? (
+        <ChartContainer config={chartConfig} className="aspect-square max-h-[250px]">
+          <PieChart>
+            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+            <Pie
+              data={userRepoContributesChartData}
+              dataKey="visitors"
+              nameKey="browser"
+              innerRadius={60}
+              strokeWidth={5}
+            >
+              <Label
+                content={({ viewBox }) => {
+                  if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
+                    return (
+                      <text
                         x={viewBox.cx}
                         y={viewBox.cy}
-                        className="text-3xl font-bold fill-foreground"
+                        textAnchor="middle"
+                        dominantBaseline="middle"
                       >
-                        {totalVisitors.toLocaleString()}
-                      </tspan>
-                      <tspan
+                        <tspan
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          className="text-3xl font-bold fill-foreground"
+                        >
+                          {totalUserRepoContributesPullRequestCount.toLocaleString()}
+                        </tspan>
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) + 24}
+                          className="fill-muted-foreground"
+                        >
+                          Pull Requests
+                        </tspan>
+                      </text>
+                    )
+                  }
+                }}
+              />
+            </Pie>
+          </PieChart>
+        </ChartContainer>
+      ) : (
+        <ChartContainer config={chartConfig} className="aspect-square max-h-[250px]">
+          <PieChart>
+            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+            <Pie
+              data={repoContributersChartData}
+              dataKey="visitors"
+              nameKey="browser"
+              innerRadius={60}
+              strokeWidth={5}
+            >
+              <Label
+                content={({ viewBox }) => {
+                  if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
+                    return (
+                      <text
                         x={viewBox.cx}
-                        y={(viewBox.cy || 0) + 24}
-                        className="fill-muted-foreground"
+                        y={viewBox.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
                       >
-                        Pull Requests
-                      </tspan>
-                    </text>
-                  )
-                }
-              }}
-            />
-          </Pie>
-        </PieChart>
-      </ChartContainer>
+                        <tspan
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          className="text-3xl font-bold fill-foreground"
+                        >
+                          {totalPullRequestCount.toLocaleString()}
+                        </tspan>
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) + 24}
+                          className="fill-muted-foreground"
+                        >
+                          Pull Requests
+                        </tspan>
+                      </text>
+                    )
+                  }
+                }}
+              />
+            </Pie>
+          </PieChart>
+        </ChartContainer>
+      )}
 
       <div>
         {repositoryFilter && (
@@ -268,9 +310,9 @@ export const PullRequestsAllPage = () => {
 
         {!userFilter && repositoryFilter && (
           <ul>
-            {Object.keys(contributers).map((username) => (
+            {Object.keys(repositoryContributers).map((username) => (
               <li key={username}>
-                {username}: {contributers[username]}
+                {username}: {repositoryContributers[username]}
               </li>
             ))}
           </ul>
@@ -330,7 +372,24 @@ export const PullRequestsAllPage = () => {
                   <div>
                     {pull.base.repo.full_name} - {pull.base.ref}
                   </div>
-                  <div className="text-lg font-bold">{pull.title}</div>
+                  <div className="text-lg font-bold">
+                    <a
+                      href={pull.html_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-block mr-2"
+                    >
+                      <Link size={12} />
+                    </a>
+                    {pull.title}
+                  </div>
+                  <div>
+                    {pull.labels.map((label) => (
+                      <Badge key={label.id} variant="default" className="mr-1">
+                        {label.name}
+                      </Badge>
+                    ))}
+                  </div>
                   <div>{pull.user.login}</div>
                   <div>{pull.created_at}</div>
                   <div>state: {pull.state}</div>

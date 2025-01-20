@@ -66,7 +66,7 @@ app.whenReady().then(() => {
     const defaultSetting = {
       accessToken: '',
       repositories: [],
-      members: [],
+      members: []
     }
 
     try {
@@ -132,7 +132,8 @@ app.whenReady().then(() => {
       const iterator = octokit.paginate.iterator(octokit.rest.pulls.list, options)
 
       const result: any[] = []
-      const oneYearAgo = dayjs().subtract(1, 'year')
+      // const oneYearAgo = dayjs().subtract(1, 'year')
+      const oneYearAgo = dayjs('2024-10-01')
       outer: for await (const { data: pulls } of iterator) {
         for (const pull of pulls) {
           const pullCreatedAt = dayjs(pull.created_at)
