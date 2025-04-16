@@ -1,3 +1,4 @@
+import { cn } from '@/shared/lib/utils'
 import { Badge } from '@/shared/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import {
@@ -33,7 +34,8 @@ const columns = [
             return (
               <Badge
                 key={topic}
-                className={{ 'mr-1': true, 'bg-white': topic !== 'deprecated' }}
+                // className={{ 'mr-1': true, 'bg-white': topic !== 'deprecated' }}
+                className={cn('mr-1', topic !== 'deprecated' && 'bg-white')}
                 variant={topic === 'deprecated' ? 'secondary' : 'outline'}
               >
                 {topic}

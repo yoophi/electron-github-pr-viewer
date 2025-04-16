@@ -1,9 +1,9 @@
+// @ts-nocheck
 import CalHeatmap from 'cal-heatmap'
 import 'cal-heatmap/cal-heatmap.css'
 import { useEffect, useRef } from 'react'
 
 type CalProps = {
-  foo: string
   data: {
     date: string
     value: number
@@ -29,7 +29,7 @@ export function Cal({ data }: CalProps) {
           animationDuration: 0,
           // itemSelector: `#${calItemId}`,
           theme: 'light',
-          date: { start: new Date('2024-02-01') },
+          date: { start: new Date('2024-05-01') },
           data: {
             source: data,
             x: 'date',

@@ -16,7 +16,7 @@ import { Link } from 'lucide-react'
 import { Label, Pie, PieChart } from 'recharts'
 
 export const PullRequestsAllPage = () => {
-  const { setting, members, memberIdMap } = useSettingStore((state) => state)
+  const { setting, members } = useSettingStore((state) => state)
   const [userFilter, setUserFilter] = useState<string | null>()
   const [repositoryFilter, setRepositoryFilter] = useState<string | null>()
 
@@ -42,7 +42,7 @@ export const PullRequestsAllPage = () => {
   })
 
   const pullRequests: any[] = []
-  queries.forEach((query, i) => {
+  queries.forEach((query, _) => {
     if (!Array.isArray(query.data)) {
       return
     }
@@ -155,8 +155,6 @@ export const PullRequestsAllPage = () => {
 
   return (
     <div>
-      {/* <pre>{JSON.stringify({ members, memberIdMap }, null, 2)}</pre> */}
-      {/* <pre>{JSON.stringify({ mmm, memberIdMap }, null, 2)}</pre> */}
       <h1 className="mb-4 text-3xl font-bold">All</h1>
       <div className="flex flex-wrap">
         <Card className="mb-2 mr-2">
@@ -166,7 +164,7 @@ export const PullRequestsAllPage = () => {
           </CardHeader>
           <CardContent>
             <div>
-              <Cal foo="some- text" data={heatmapData} />
+              <Cal data={heatmapData} />
             </div>
           </CardContent>
         </Card>
@@ -209,48 +207,52 @@ export const PullRequestsAllPage = () => {
       <div>TOTAL: {filteredPullRequests.length}</div>
 
       {userFilter ? (
-        <ChartContainer config={chartConfig} className="aspect-square max-h-[250px]">
-          <PieChart>
-            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-            <Pie
-              data={userRepoContributesChartData}
-              dataKey="visitors"
-              nameKey="browser"
-              innerRadius={60}
-              strokeWidth={5}
-            >
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
-                    return (
-                      <text
-                        x={viewBox.cx}
-                        y={viewBox.cy}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                      >
-                        <tspan
+        <>
+          <div>USER_FILTER: {userFilter}</div>
+          <ChartContainer config={chartConfig} className="aspect-square max-h-[250px]">
+            <PieChart>
+              <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+              <Pie
+                data={userRepoContributesChartData}
+                dataKey="visitors"
+                nameKey="browser"
+                innerRadius={60}
+                strokeWidth={5}
+              >
+                <Label
+                  content={({ viewBox }) => {
+                    if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
+                      return (
+                        <text
                           x={viewBox.cx}
                           y={viewBox.cy}
-                          className="text-3xl font-bold fill-foreground"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
                         >
-                          {totalUserRepoContributesPullRequestCount.toLocaleString()}
-                        </tspan>
-                        <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground"
-                        >
-                          Pull Requests
-                        </tspan>
-                      </text>
-                    )
-                  }
-                }}
-              />
-            </Pie>
-          </PieChart>
-        </ChartContainer>
+                          <tspan
+                            x={viewBox.cx}
+                            y={viewBox.cy}
+                            className="text-3xl font-bold fill-foreground"
+                          >
+                            {totalUserRepoContributesPullRequestCount.toLocaleString()}
+                          </tspan>
+                          <tspan
+                            x={viewBox.cx}
+                            y={(viewBox.cy || 0) + 24}
+                            className="fill-muted-foreground"
+                          >
+                            Pull Requests
+                          </tspan>
+                        </text>
+                      )
+                    }
+                    return null
+                  }}
+                />
+              </Pie>
+            </PieChart>
+          </ChartContainer>
+        </>
       ) : (
         <ChartContainer config={chartConfig} className="aspect-square max-h-[250px]">
           <PieChart>
@@ -289,6 +291,7 @@ export const PullRequestsAllPage = () => {
                       </text>
                     )
                   }
+                  return null
                 }}
               />
             </Pie>

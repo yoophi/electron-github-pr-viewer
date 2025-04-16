@@ -37,5 +37,5 @@ export const RepoHeatmap = ({ data, userIds, repository }: RepoHeatmapProps) => 
     value: pullRequestsCount.get(key)
   }))
 
-  return <Cal foo={repository} data={heatmapData} />
+  return <Cal data={heatmapData} />
 }

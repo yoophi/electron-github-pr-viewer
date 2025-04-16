@@ -3,7 +3,7 @@ import { useSettingStore } from '@/entities/settings'
 import { RepositoriesList } from '@/entities/repositories'
 import { Badge } from '@/shared/ui/badge'
 import { useState } from 'react'
-import { Check, CircleCheck } from 'lucide-react'
+import { Check } from 'lucide-react'
 
 export const RepositoriesPage = () => {
   const { setting } = useSettingStore((state) => state)

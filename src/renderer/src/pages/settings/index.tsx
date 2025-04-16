@@ -42,7 +42,11 @@ export function SettingsForm({ defaultValues }: { defaultValues: Setting }): JSX
   async function onSubmit(data: z.infer<typeof FormSchema>): Promise<void> {
     try {
       const resp = (await window.api.writeSettings(data)) as IPCResponse<{ null }>
-      setSettings({ accessToken: data.accessToken, repositories: data.repositories.split(/\s+/) })
+      setSettings({
+        accessToken: data.accessToken,
+        repositories: data.repositories.split(/\s+/),
+        members: []
+      })
       toast({
         title: resp.message,
         description: (
@@ -124,7 +128,8 @@ export const SettingsPage = () => {
 
       setSettings({
         accessToken: result.data.accessToken,
-        repositories: result.data.repositories.join('\n')
+        repositories: result.data.repositories.join('\n'),
+        members: []
       })
     })()
   }, [])
