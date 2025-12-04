@@ -23,13 +23,16 @@ export function Cal({ data }: CalProps) {
       }
 
       const cal = new CalHeatmap()
+      const max = Math.max(...data.map((d) => d.value)) || 0
+      const maxValue = max < 10 ? 10 : max
+
       await cal.paint(
         {
           itemSelector: calRef.current,
           animationDuration: 0,
-          // itemSelector: `#${calItemId}`,
           theme: 'light',
-          date: { start: new Date('2024-05-01') },
+          // date: { start: new Date('2025-04-01') },
+          date: { start: new Date('2025-01-01') },
           data: {
             source: data,
             x: 'date',
@@ -40,7 +43,20 @@ export function Cal({ data }: CalProps) {
             color: {
               type: 'quantize',
               scheme: 'Greens',
-              domain: [0, 1, 2, 3, 4, 5]
+              domain: [
+                0, 1, 2, 3, 4, 5
+                // 0,
+                // maxValue * 0.1,
+                // maxValue * 0.2,
+                // maxValue * 0.3,
+                // maxValue * 0.4,
+                // maxValue * 0.5,
+                // maxValue * 0.6,
+                // maxValue * 0.7,
+                // maxValue * 0.8,
+                // maxValue * 0.9,
+                // maxValue
+              ]
             }
           },
           domain: {

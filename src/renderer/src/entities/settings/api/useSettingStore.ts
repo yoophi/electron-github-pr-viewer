@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { SettingData } from '../model/setting'
 import { RecordType } from 'zod'
-
+import { IPCResponse } from '@/shared/model'
 type Member = {
   name: string
   ids: number[]
@@ -18,6 +18,7 @@ type State = {
 }
 
 type Actions = {
+  init: () => void
   setSettings: (setting: SettingData) => void
 }
 
@@ -27,6 +28,13 @@ export const useSettingStore = create<State & Actions>()(
   devtools(
     (set) => ({
       ...initialState,
+      init: async (): Promise<void> => {
+        const result = (await window.api.getSettings()) as IPCResponse<SettingData>
+        if (result.error) {
+          return
+        }
+        set({ setting: result.data })
+      },
       setSettings: (setting: SettingData): void => {
         // const idMember = [
         //   ...setting.members.map((member) => {
