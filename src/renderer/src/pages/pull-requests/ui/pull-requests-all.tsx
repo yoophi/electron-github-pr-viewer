@@ -10,9 +10,15 @@ import {
   PrContributionChart,
   PrUserFilter
 } from '@/features/pr-analysis'
+import {
+  useDateRange,
+  DatePresetButtons,
+  DateRangePicker
+} from '@/features/pr-date-filter'
 import { cn } from '@/shared/lib/utils'
 import { Cal } from '@/shared/ui/cal-heatmap'
 import { RepoHeatmap } from '@/shared/ui/repo-heatmap'
+import { Separator } from '@/shared/ui/separator'
 import { useMemo, useState } from 'react'
 
 import { Badge } from '@/shared/ui/badge'
@@ -25,11 +31,22 @@ export const PullRequestsAllPage = () => {
   const { setting } = useSettingStore((state) => state)
   const [userFilter, setUserFilter] = useState<string | null>(null)
   const [repositoryFilter, setRepositoryFilter] = useState<string | null>(null)
+  const { dateRange, activePreset, selectPreset, setCustomRange } = useDateRange()
 
   const queries = usePullRequests(setting?.repositories ?? [], setting?.accessToken)
 
   const queryStatus = useMemo(() => flattenQueryResults(queries), [queries])
-  const { pullRequests } = queryStatus
+  const { pullRequests: allPullRequests } = queryStatus
+
+  const pullRequests = useMemo(
+    () =>
+      allPullRequests.filter((pr) => {
+        const created = new Date(pr.created_at)
+        return created >= dateRange.from && created <= dateRange.to
+      }),
+    [allPullRequests, dateRange]
+  )
+
   const users = useMemo(() => aggregateUserStats(pullRequests), [pullRequests])
 
   const filteredPullRequests = useMemo(
@@ -62,7 +79,12 @@ export const PullRequestsAllPage = () => {
 
   return (
     <div>
-      <h1 className="mb-4 text-3xl font-bold">All</h1>
+      <div className="mb-4 space-y-3">
+        <DatePresetButtons activePreset={activePreset} onSelect={selectPreset} />
+        <DateRangePicker dateRange={dateRange} onChange={setCustomRange} />
+      </div>
+
+      <Separator className="mb-4" />
 
       {(queryStatus.loadingCount > 0 || queryStatus.errorCount > 0) && (
         <div className="flex gap-2 mb-4">
