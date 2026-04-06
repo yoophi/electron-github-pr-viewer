@@ -4,23 +4,24 @@ import { useSettingStore } from '@/entities/settings'
 export const PullRequestsGroupByRepositoryPage = () => {
   const { setting } = useSettingStore((state) => state)
 
+  const queries = useQueries({
+    queries: (setting?.repositories ?? []).map((repository) => ({
+      queryKey: ['pull-requests', repository],
+      queryFn: async () => {
+        const result = await window.api.getPullRequests({
+          accessToken: setting!.accessToken,
+          repository: repository
+        })
+        return result.data
+      },
+      meta: { repository },
+      enabled: !!setting?.accessToken
+    }))
+  })
+
   if (!setting) {
     return <>setting not found</>
   }
-
-  const queries = useQueries({
-    queries: setting.repositories?.map((repository) => ({
-      queryKey: ['pull-requests', repository],
-      queryFn: async () => {
-        const { data } = await window.api.getPullRequests({
-          accessToken: setting.accessToken,
-          repository: repository
-        })
-        return data
-      },
-      meta: { repository }
-    }))
-  })
 
   return (
     <div>

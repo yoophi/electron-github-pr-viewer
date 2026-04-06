@@ -13,25 +13,7 @@ export const MembersAllPage = () => {
         setErrorMessage(result.message)
       }
 
-      console.log(JSON.stringify(result.data, null, 2))
-
       setSettings(result.data)
-
-      const idMap = result.data.members.map((member) => {
-        const { name, ids } = member
-        return ids.map((id) => {
-          return {
-            id,
-            name
-          }
-        })
-      })
-
-      console.log(idMap.flat())
-      const x = idMap.flat().reduce((prev, curr) => {
-        return { ...prev, [curr.id]: curr }
-      }, {})
-      console.log({ x })
     })()
   }, [])
   return (

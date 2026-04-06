@@ -20,24 +20,21 @@ export const PullRequestsAllPage = () => {
   const [userFilter, setUserFilter] = useState<string | null>()
   const [repositoryFilter, setRepositoryFilter] = useState<string | null>()
 
-  if (!setting) {
-    return <>setting not found</>
-  }
-
   const queries = useQueries({
-    queries: setting.repositories?.map((repository) => ({
+    queries: (setting?.repositories ?? []).map((repository) => ({
       queryKey: ['pull-requests', repository],
       queryFn: async () => {
-        const { data } = await window.api.getPullRequests({
-          accessToken: setting.accessToken,
+        const result = await window.api.getPullRequests({
+          accessToken: setting!.accessToken,
           repository: repository,
           params: {
             state: 'all'
           }
         })
-        return data
+        return result.data
       },
-      meta: { repository }
+      meta: { repository },
+      enabled: !!setting?.accessToken
     }))
   })
 
@@ -152,6 +149,10 @@ export const PullRequestsAllPage = () => {
   const totalUserRepoContributesPullRequestCount = useMemo(() => {
     return userRepoContributesChartData.reduce((acc, curr) => acc + curr.visitors, 0)
   }, [userRepoContributesChartData])
+
+  if (!setting) {
+    return <>setting not found</>
+  }
 
   return (
     <div>
