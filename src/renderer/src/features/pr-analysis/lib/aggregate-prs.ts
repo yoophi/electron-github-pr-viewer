@@ -1,7 +1,8 @@
 import dayjs from 'dayjs'
+import type { PullRequest } from '@/entities/pull-request'
 
-export function flattenQueryResults(queries: { data: any }[]): any[] {
-  const result: any[] = []
+export function flattenQueryResults(queries: { data?: PullRequest[] }[]): PullRequest[] {
+  const result: PullRequest[] = []
   queries.forEach((query) => {
     if (Array.isArray(query.data)) {
       result.push(...query.data)
@@ -10,7 +11,7 @@ export function flattenQueryResults(queries: { data: any }[]): any[] {
   return result
 }
 
-export function aggregateUserStats(pullRequests: any[]): Record<string, Record<string, number>> {
+export function aggregateUserStats(pullRequests: PullRequest[]): Record<string, Record<string, number>> {
   const users: Record<string, Record<string, number>> = {}
   pullRequests.forEach((pull) => {
     const login = pull.user.login
@@ -22,7 +23,7 @@ export function aggregateUserStats(pullRequests: any[]): Record<string, Record<s
   return users
 }
 
-export function aggregateByRepository(pullRequests: any[]): Map<string, number> {
+export function aggregateByRepository(pullRequests: PullRequest[]): Map<string, number> {
   const counts = new Map<string, number>()
   pullRequests.forEach((pull) => {
     const name = pull.base.repo.full_name
@@ -31,7 +32,7 @@ export function aggregateByRepository(pullRequests: any[]): Map<string, number> 
   return counts
 }
 
-export function aggregateByDate(pullRequests: any[]): { date: string; value: number }[] {
+export function aggregateByDate(pullRequests: PullRequest[]): { date: string; value: number }[] {
   const counts = new Map<string, number>()
   pullRequests.forEach((pull) => {
     const date = dayjs(pull.created_at).format('YYYY-MM-DDT00:00:00')
@@ -41,7 +42,7 @@ export function aggregateByDate(pullRequests: any[]): { date: string; value: num
 }
 
 export function aggregateContributors(
-  pullRequests: any[],
+  pullRequests: PullRequest[],
   groupBy: 'user' | 'repository'
 ): Record<string, number> {
   const result: Record<string, number> = {}

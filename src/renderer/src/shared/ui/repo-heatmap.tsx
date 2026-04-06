@@ -1,8 +1,9 @@
 import dayjs from 'dayjs'
 import { Cal } from './cal-heatmap'
+import type { PullRequest } from '@/entities/pull-request'
 
 type RepoHeatmapProps = {
-  data?: any[]
+  data?: PullRequest[]
   userIds?: string[]
   repository?: string
 }
