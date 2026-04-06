@@ -27,6 +27,9 @@ const FormSchema = z.object({
   accessToken: z.string().min(2, {
     message: 'access_token must be at least 2 characters.'
   }),
+  org: z.string().min(1, {
+    message: 'organization must be at least 1 character.'
+  }),
   repositories: z.string().min(2, {
     message: 'repositories must be at least 2 characters.'
   })
@@ -44,6 +47,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: Setting }): JSX
       const resp = (await window.api.writeSettings(data)) as IPCResponse<{ null }>
       setSettings({
         accessToken: data.accessToken,
+        org: data.org,
         repositories: data.repositories.split(/\s+/),
         members: []
       })
@@ -95,6 +99,20 @@ export function SettingsForm({ defaultValues }: { defaultValues: Setting }): JSX
         />
         <FormField
           control={form.control}
+          name="org"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>GitHub Organization</FormLabel>
+              <FormControl>
+                <Input placeholder="payhereinc" {...field} />
+              </FormControl>
+              <FormDescription>GitHub 조직명을 입력해주세요.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="repositories"
           render={({ field }) => (
             <FormItem>
@@ -128,6 +146,7 @@ export const SettingsPage = () => {
 
       setSettings({
         accessToken: result.data.accessToken,
+        org: result.data.org || 'payhereinc',
         repositories: result.data.repositories.join('\n'),
         members: []
       })

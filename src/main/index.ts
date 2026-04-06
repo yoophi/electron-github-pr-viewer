@@ -65,6 +65,7 @@ app.whenReady().then(() => {
     const settingsPath = getSettingPath()
     const defaultSetting = {
       accessToken: '',
+      org: 'payhereinc',
       repositories: [],
       members: []
     }
@@ -84,6 +85,7 @@ app.whenReady().then(() => {
     const settingsPath = getSettingPath()
     const userSetting = {
       accessToken: data.accessToken,
+      org: data.org || 'payhereinc',
       repositories: data.repositories.split(/\s+/).filter(Boolean)
     }
 
@@ -91,11 +93,11 @@ app.whenReady().then(() => {
 
     return { error: false, message: 'ok' }
   })
-  ipcMain.handle('get-repositories', async (_, accessToken) => {
+  ipcMain.handle('get-repositories', async (_, { accessToken, org }) => {
     const { Octokit } = await import('octokit')
     const octokit = new Octokit({ auth: accessToken })
     const iterator = octokit.paginate.iterator(octokit.rest.repos.listForOrg, {
-      org: 'payhereinc',
+      org,
       per_page: 100,
       headers: {
         'X-GitHub-Api-Version': '2022-11-28'
@@ -132,7 +134,7 @@ app.whenReady().then(() => {
       const iterator = octokit.paginate.iterator(octokit.rest.pulls.list, options)
 
       const result: any[] = []
-      const oneYearAgo = dayjs('2025-09-01')
+      const oneYearAgo = dayjs().subtract(1, 'year')
       outer: for await (const { data: pulls } of iterator) {
         for (const pull of pulls) {
           const pullCreatedAt = dayjs(pull.created_at)

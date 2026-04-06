@@ -6,9 +6,9 @@ declare global {
   interface Window {
     electron: ElectronAPI
     api: {
-      getSettings: () => Promise<IPCResponse<{ accessToken: string; repositories: string[] }>>
-      writeSettings: (data: Setting) => Promise<IPCResponse<{ null }>>
-      getRepositories: (accessToken: string) => Promise<IPCResponse<any>>
+      getSettings: () => Promise<IPCResponse<{ accessToken: string; org: string; repositories: string[] }>>
+      writeSettings: (data: Setting) => Promise<IPCResponse<void>>
+      getRepositories: (args: { accessToken: string; org: string }) => Promise<IPCResponse<any>>
       getPullRequests: (args: {
         accessToken: string
         repository: string

@@ -21,7 +21,7 @@ export const RepositoriesPage = () => {
   } = useQuery({
     queryKey: ['repositories'],
     queryFn: async () => {
-      const { data } = await window.api.getRepositories(setting.accessToken)
+      const { data } = await window.api.getRepositories({ accessToken: setting.accessToken, org: setting.org })
       return data
     },
     staleTime: 1000 * 60 * 10, // 10분 동안 데이터를 신선한 상태로 유지

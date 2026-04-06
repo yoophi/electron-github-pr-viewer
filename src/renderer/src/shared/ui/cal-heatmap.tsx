@@ -31,8 +31,7 @@ export function Cal({ data }: CalProps) {
           itemSelector: calRef.current,
           animationDuration: 0,
           theme: 'light',
-          // date: { start: new Date('2025-04-01') },
-          date: { start: new Date('2025-01-01') },
+          date: { start: new Date(new Date().setFullYear(new Date().getFullYear() - 1)) },
           data: {
             source: data,
             x: 'date',
