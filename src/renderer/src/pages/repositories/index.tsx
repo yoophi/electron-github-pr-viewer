@@ -1,6 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
 import { useSettingStore } from '@/entities/settings'
-import { RepositoriesList } from '@/entities/repositories'
+import { RepositoriesList, useRepositories } from '@/entities/repository'
 import { Badge } from '@/shared/ui/badge'
 import { useState } from 'react'
 import { Check } from 'lucide-react'
@@ -9,24 +8,16 @@ export const RepositoriesPage = () => {
   const { setting } = useSettingStore((state) => state)
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
 
-  if (!setting?.accessToken) {
-    return <div>access_token not found</div>
-  }
-
   const {
     data: repositories,
     isLoading,
     isError,
     error
-  } = useQuery({
-    queryKey: ['repositories'],
-    queryFn: async () => {
-      const { data } = await window.api.getRepositories({ accessToken: setting.accessToken, org: setting.org })
-      return data
-    },
-    staleTime: 1000 * 60 * 10, // 10분 동안 데이터를 신선한 상태로 유지
-    gcTime: 1000 * 60 * 60 // 1시간 동안 캐시 유지
-  })
+  } = useRepositories(setting?.accessToken, setting?.org)
+
+  if (!setting?.accessToken) {
+    return <div>access_token not found</div>
+  }
 
   if (isLoading) {
     return <div>loading...</div>

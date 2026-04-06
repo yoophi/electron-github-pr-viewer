@@ -1,11 +1,10 @@
 import { useSettingStore } from '@/entities/settings'
+import { usePullRequests } from '@/entities/pull-request'
 import { cn } from '@/shared/lib/utils'
 import { Cal } from '@/shared/ui/cal-heatmap'
 import { RepoHeatmap } from '@/shared/ui/repo-heatmap'
-import { useQueries } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { useMemo, useState } from 'react'
-import { RecordType } from 'zod'
 
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -28,23 +27,7 @@ export const PullRequestsAllPage = () => {
   const [userFilter, setUserFilter] = useState<string | null>()
   const [repositoryFilter, setRepositoryFilter] = useState<string | null>()
 
-  const queries = useQueries({
-    queries: (setting?.repositories ?? []).map((repository) => ({
-      queryKey: ['pull-requests', repository],
-      queryFn: async () => {
-        const result = await window.api.getPullRequests({
-          accessToken: setting!.accessToken,
-          repository: repository,
-          params: {
-            state: 'all'
-          }
-        })
-        return result.data
-      },
-      meta: { repository },
-      enabled: !!setting?.accessToken
-    }))
-  })
+  const queries = usePullRequests(setting?.repositories ?? [], setting?.accessToken)
 
   const pullRequests: any[] = []
   queries.forEach((query, _) => {
@@ -57,7 +40,7 @@ export const PullRequestsAllPage = () => {
     })
   })
 
-  const users: RecordType<string, any> = {}
+  const users: Record<string, any> = {}
   const mmm = { ...members }
   pullRequests.forEach((pull) => {
     if (!users.hasOwnProperty(pull.user.login)) {

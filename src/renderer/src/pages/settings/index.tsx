@@ -44,7 +44,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: Setting }): JSX
 
   async function onSubmit(data: z.infer<typeof FormSchema>): Promise<void> {
     try {
-      const resp = (await window.api.writeSettings(data)) as IPCResponse<{ null }>
+      const resp = (await window.api.writeSettings(data)) as IPCResponse<void>
       setSettings({
         accessToken: data.accessToken,
         org: data.org,
@@ -138,6 +138,7 @@ export const SettingsPage = () => {
     ;(async () => {
       const result = (await window.api.getSettings()) as IPCResponse<{
         accessToken: string
+        org: string
         repositories: string[]
       }>
       if (result.error) {

@@ -49,11 +49,11 @@ export const useSettingStore = create<State & Actions>()(
         //   })
         // ]
 
-        const members = setting.members.reduce((prev, curr) => {
+        const members = (setting.members ?? []).reduce((prev, curr) => {
           prev[curr.name] = curr
           return prev
         }, {})
-        const memberIdMap = setting.members.reduce((prev, curr) => {
+        const memberIdMap = (setting.members ?? []).reduce((prev, curr) => {
           curr.ids.forEach((id) => {
             prev[id] = curr
           })

@@ -1,23 +1,10 @@
-import { useQueries } from '@tanstack/react-query'
 import { useSettingStore } from '@/entities/settings'
+import { usePullRequests } from '@/entities/pull-request'
 
 export const PullRequestsGroupByRepositoryPage = () => {
   const { setting } = useSettingStore((state) => state)
 
-  const queries = useQueries({
-    queries: (setting?.repositories ?? []).map((repository) => ({
-      queryKey: ['pull-requests', repository],
-      queryFn: async () => {
-        const result = await window.api.getPullRequests({
-          accessToken: setting!.accessToken,
-          repository: repository
-        })
-        return result.data
-      },
-      meta: { repository },
-      enabled: !!setting?.accessToken
-    }))
-  })
+  const queries = usePullRequests(setting?.repositories ?? [], setting?.accessToken)
 
   if (!setting) {
     return <>setting not found</>
