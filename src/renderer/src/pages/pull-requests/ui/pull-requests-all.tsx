@@ -145,16 +145,15 @@ export const PullRequestsAllPage = () => {
             {[...repositoryPrCount.keys()].map((repo) => (
               <Card key={repo} className="mb-2 mr-2">
                 <CardHeader>
-                  <CardTitle>
-                    <button onClick={() => setRepositoryFilter(repo)}>{repo}</button>
-                    <a
-                      href={`https://github.com/${repo}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-block ml-1"
-                    >
-                      <Link size={10} />
-                    </a>
+                  <CardTitle className="flex items-center gap-1">
+                    <Button variant="link" className="h-auto p-0 text-base" onClick={() => setRepositoryFilter(repo)}>
+                      {repo}
+                    </Button>
+                    <Button variant="ghost" size="sm" className="w-6 h-6 p-0" asChild>
+                      <a href={`https://github.com/${repo}`} target="_blank" rel="noreferrer">
+                        <Link size={10} />
+                      </a>
+                    </Button>
                   </CardTitle>
                   <CardDescription>
                     PULL Requests: ({repositoryPrCount.get(repo)})
@@ -172,39 +171,42 @@ export const PullRequestsAllPage = () => {
           </div>
         </TabsContent>
         <TabsContent value="pull-requests">
-          <div>
+          <div className="space-y-2">
             {[...filteredByRepo]
               .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
               .map((pull) => (
-                <div
-                  className={cn('p-4 border', { 'bg-slate-200': pull.state === 'closed' })}
-                  key={pull.id}
-                >
-                  <div>
-                    {pull.base.repo.full_name} - {pull.base.ref}
-                  </div>
-                  <div className="text-lg font-bold">
-                    <a
-                      href={pull.html_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-block mr-2"
-                    >
-                      <Link size={12} />
-                    </a>
-                    {pull.title}
-                  </div>
-                  <div>
-                    {pull.labels.map((label) => (
-                      <Badge key={label.id} variant="default" className="mr-1">
-                        {label.name}
+                <Card key={pull.id} className={cn({ 'opacity-60': pull.state === 'closed' })}>
+                  <CardHeader className="pb-2">
+                    <div className="flex items-center justify-between">
+                      <CardDescription>
+                        {pull.base.repo.full_name} &middot; {pull.base.ref}
+                      </CardDescription>
+                      <Badge variant={pull.state === 'open' ? 'default' : 'secondary'}>
+                        {pull.state}
                       </Badge>
-                    ))}
-                  </div>
-                  <div>{pull.user.login}</div>
-                  <div>{pull.created_at}</div>
-                  <div>state: {pull.state}</div>
-                </div>
+                    </div>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Button variant="ghost" size="sm" className="w-6 h-6 p-0 shrink-0" asChild>
+                        <a href={pull.html_url} target="_blank" rel="noreferrer">
+                          <Link size={12} />
+                        </a>
+                      </Button>
+                      <span className="truncate">{pull.title}</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="flex flex-wrap items-center gap-1">
+                      {pull.labels.map((label) => (
+                        <Badge key={label.id} variant="outline" className="text-xs">
+                          {label.name}
+                        </Badge>
+                      ))}
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {pull.user.login} &middot; {pull.created_at}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
               ))}
           </div>
         </TabsContent>
