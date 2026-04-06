@@ -28,7 +28,8 @@ export const PullRequestsAllPage = () => {
 
   const queries = usePullRequests(setting?.repositories ?? [], setting?.accessToken)
 
-  const pullRequests = useMemo(() => flattenQueryResults(queries), [queries])
+  const queryStatus = useMemo(() => flattenQueryResults(queries), [queries])
+  const { pullRequests } = queryStatus
   const users = useMemo(() => aggregateUserStats(pullRequests), [pullRequests])
 
   const filteredPullRequests = useMemo(
@@ -62,6 +63,25 @@ export const PullRequestsAllPage = () => {
   return (
     <div>
       <h1 className="mb-4 text-3xl font-bold">All</h1>
+
+      {(queryStatus.loadingCount > 0 || queryStatus.errorCount > 0) && (
+        <div className="flex gap-2 mb-4">
+          {queryStatus.loadingCount > 0 && (
+            <Badge variant="outline">
+              loading: {queryStatus.loadingCount}/{queryStatus.totalQueries}
+            </Badge>
+          )}
+          {queryStatus.errorCount > 0 && (
+            <Badge variant="destructive">
+              failed: {queryStatus.errorCount}/{queryStatus.totalQueries}
+            </Badge>
+          )}
+          <Badge variant="secondary">
+            loaded: {queryStatus.successCount}/{queryStatus.totalQueries}
+          </Badge>
+        </div>
+      )}
+
       <div className="flex flex-wrap">
         <Card className="mb-2 mr-2">
           <CardHeader>

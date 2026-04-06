@@ -1,14 +1,45 @@
 import dayjs from 'dayjs'
 import type { PullRequest } from '@/entities/pull-request'
 
-export function flattenQueryResults(queries: { data?: PullRequest[] }[]): PullRequest[] {
-  const result: PullRequest[] = []
+type QueryResult = {
+  data?: PullRequest[]
+  isLoading?: boolean
+  isError?: boolean
+  error?: Error | null
+}
+
+export type FlattenedResult = {
+  pullRequests: PullRequest[]
+  totalQueries: number
+  loadingCount: number
+  errorCount: number
+  successCount: number
+}
+
+export function flattenQueryResults(queries: QueryResult[]): FlattenedResult {
+  const pullRequests: PullRequest[] = []
+  let loadingCount = 0
+  let errorCount = 0
+  let successCount = 0
+
   queries.forEach((query) => {
-    if (Array.isArray(query.data)) {
-      result.push(...query.data)
+    if (query.isLoading) {
+      loadingCount++
+    } else if (query.isError) {
+      errorCount++
+    } else if (Array.isArray(query.data)) {
+      successCount++
+      pullRequests.push(...query.data)
     }
   })
-  return result
+
+  return {
+    pullRequests,
+    totalQueries: queries.length,
+    loadingCount,
+    errorCount,
+    successCount
+  }
 }
 
 export function aggregateUserStats(pullRequests: PullRequest[]): Record<string, Record<string, number>> {
