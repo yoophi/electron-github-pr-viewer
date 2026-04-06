@@ -24,12 +24,17 @@ export class FileSettingsRepository implements SettingsPort {
     try {
       const data = fs.readFileSync(this.filePath, 'utf-8')
       return { ...DEFAULT_SETTING, ...JSON.parse(data) }
-    } catch {
-      return { ...DEFAULT_SETTING }
+    } catch (err: any) {
+      if (err?.code === 'ENOENT') {
+        return { ...DEFAULT_SETTING }
+      }
+      throw err
     }
   }
 
   save(data: SettingData): void {
-    fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf-8')
+    const tmpPath = this.filePath + '.tmp'
+    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf-8')
+    fs.renameSync(tmpPath, this.filePath)
   }
 }
