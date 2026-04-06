@@ -7,45 +7,53 @@ type State = {
   setting?: SettingData
   members: Record<string, Member>
   memberIdMap: Record<number, Member>
+  initialized: boolean
+  error?: string
 }
 
 type Actions = {
-  init: () => void
+  init: () => Promise<void>
   setSettings: (setting: SettingData) => void
 }
 
-const initialState: State = { members: {}, memberIdMap: {} }
+function buildMemberMaps(setting: SettingData) {
+  const members = (setting.members ?? []).reduce(
+    (prev, curr) => {
+      prev[curr.name] = curr
+      return prev
+    },
+    {} as Record<string, Member>
+  )
+  const memberIdMap = (setting.members ?? []).reduce(
+    (prev, curr) => {
+      curr.ids.forEach((id) => {
+        prev[id] = curr
+      })
+      return prev
+    },
+    {} as Record<number, Member>
+  )
+  return { members, memberIdMap }
+}
+
+const initialState: State = { members: {}, memberIdMap: {}, initialized: false }
 
 export const useSettingStore = create<State & Actions>()(
   devtools(
-    (set) => ({
+    (set, get) => ({
       ...initialState,
       init: async (): Promise<void> => {
+        if (get().initialized) return
         const result = (await window.api.getSettings()) as IPCResponse<SettingData>
         if (result.error) {
+          set({ initialized: true, error: result.message })
           return
         }
-        set({ setting: result.data })
+        const setting = result.data
+        set({ setting, ...buildMemberMaps(setting), initialized: true, error: undefined })
       },
       setSettings: (setting: SettingData): void => {
-        const members = (setting.members ?? []).reduce(
-          (prev, curr) => {
-            prev[curr.name] = curr
-            return prev
-          },
-          {} as Record<string, Member>
-        )
-        const memberIdMap = (setting.members ?? []).reduce(
-          (prev, curr) => {
-            curr.ids.forEach((id) => {
-              prev[id] = curr
-            })
-            return prev
-          },
-          {} as Record<number, Member>
-        )
-
-        set({ setting, members, memberIdMap })
+        set({ setting, ...buildMemberMaps(setting), error: undefined })
       }
     }),
     { store: 'useSettingStore' }
