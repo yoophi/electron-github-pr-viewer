@@ -38,14 +38,14 @@ export const PullRequestsAllPage = () => {
   const queryStatus = useMemo(() => flattenQueryResults(queries), [queries])
   const { pullRequests: allPullRequests } = queryStatus
 
-  const pullRequests = useMemo(
-    () =>
-      allPullRequests.filter((pr) => {
-        const created = new Date(pr.created_at)
-        return created >= dateRange.from && created <= dateRange.to
-      }),
-    [allPullRequests, dateRange]
-  )
+  const pullRequests = useMemo(() => {
+    const fromDate = dateRange.from.toLocaleDateString('sv-SE') // YYYY-MM-DD (KST)
+    const toDate = dateRange.to.toLocaleDateString('sv-SE')
+    return allPullRequests.filter((pr) => {
+      const createdDate = new Date(pr.created_at).toLocaleDateString('sv-SE')
+      return createdDate >= fromDate && createdDate <= toDate
+    })
+  }, [allPullRequests, dateRange])
 
   const users = useMemo(() => aggregateUserStats(pullRequests), [pullRequests])
 
