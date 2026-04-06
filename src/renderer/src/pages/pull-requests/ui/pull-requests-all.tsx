@@ -1,135 +1,55 @@
 import { useSettingStore } from '@/entities/settings'
 import { usePullRequests } from '@/entities/pull-request'
+import {
+  flattenQueryResults,
+  aggregateUserStats,
+  aggregateByRepository,
+  aggregateByDate,
+  aggregateContributors,
+  toChartData,
+  PrContributionChart,
+  PrUserFilter
+} from '@/features/pr-analysis'
 import { cn } from '@/shared/lib/utils'
 import { Cal } from '@/shared/ui/cal-heatmap'
 import { RepoHeatmap } from '@/shared/ui/repo-heatmap'
-import dayjs from 'dayjs'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/shared/ui/chart'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Link } from 'lucide-react'
-import { Label, Pie, PieChart } from 'recharts'
-
-function stringToHue(str: string): number {
-  let hash = 0
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash)
-  }
-  return Math.abs(hash) % 360
-}
 
 export const PullRequestsAllPage = () => {
-  const { setting, members } = useSettingStore((state) => state)
-  const [userFilter, setUserFilter] = useState<string | null>()
-  const [repositoryFilter, setRepositoryFilter] = useState<string | null>()
+  const { setting } = useSettingStore((state) => state)
+  const [userFilter, setUserFilter] = useState<string | null>(null)
+  const [repositoryFilter, setRepositoryFilter] = useState<string | null>(null)
 
   const queries = usePullRequests(setting?.repositories ?? [], setting?.accessToken)
-
-  const pullRequests: any[] = []
-  queries.forEach((query, _) => {
-    if (!Array.isArray(query.data)) {
-      return
-    }
-
-    query.data.forEach((pull) => {
-      pullRequests.push(pull)
-    })
-  })
-
-  const users: Record<string, any> = {}
-  const mmm = { ...members }
-  pullRequests.forEach((pull) => {
-    if (!users.hasOwnProperty(pull.user.login)) {
-      users[pull.user.login] = {}
-    }
-    users[pull.user.login][pull.state] =
-      typeof users[pull.user.login][pull.state] === 'number'
-        ? users[pull.user.login][pull.state] + 1
-        : 1
-
-    // if (!members.hasOwnProperty(pull))
-    // if (!memberIdMap.hasOwnProperty(pull.user.id)) {
-    //   console.log(pull.user.id)
-    //   memberIdMap[pull.user.id] = { name: pull.user.login, ids: [pull.user.id], groups: [] }
-    //   mmm[pull.user.login] = { name: pull.user.login, ids: [pull.user.id], groups: [] }
-    // }
-    // memberIdMap[pull.user.id][pull.state] =
-    //   typeof memberIdMap[pull.user.id][pull.state] === 'number'
-    //     ? memberIdMap[pull.user.id][pull.state] + 1
-    //     : 1
-  })
+  const pullRequests = flattenQueryResults(queries)
+  const users = aggregateUserStats(pullRequests)
 
   const filteredPullRequests = userFilter
     ? pullRequests.filter((pull) => pull.user.login === userFilter)
     : pullRequests
 
-  const respositoryPullRequestsCount = new Map()
-  filteredPullRequests.forEach((pull) => {
-    respositoryPullRequestsCount.set(
-      pull.base.repo.full_name,
-      (respositoryPullRequestsCount.get(pull.base.repo.full_name) || 0) + 1
-    )
-  })
+  const repositoryPrCount = aggregateByRepository(filteredPullRequests)
 
-  const pullRequestsCount = new Map()
-  filteredPullRequests
-    .filter((repo) => (repositoryFilter ? repo.base.repo.full_name === repositoryFilter : true))
-    .forEach((pull) => {
-      const pullRequestCreatedDate = dayjs(pull.created_at).format('YYYY-MM-DDT00:00:00')
-      pullRequestsCount.set(
-        pullRequestCreatedDate,
-        (pullRequestsCount.get(pullRequestCreatedDate) || 0) + 1
-      )
-    })
+  const filteredByRepo = repositoryFilter
+    ? filteredPullRequests.filter((pr) => pr.base.repo.full_name === repositoryFilter)
+    : filteredPullRequests
 
-  const heatmapData = [...pullRequestsCount.keys()].map((key) => ({
-    date: key,
-    value: pullRequestsCount.get(key)
-  }))
+  const heatmapData = aggregateByDate(filteredByRepo)
+  const contributorsByUser = aggregateContributors(filteredByRepo, 'user')
+  const contributorsByRepo = aggregateContributors(
+    userFilter ? filteredPullRequests : pullRequests.filter((pr) => (userFilter ? pr.user.login === userFilter : true)),
+    'repository'
+  )
 
-  const repositoryContributers = filteredPullRequests
-    .filter((pr) => (repositoryFilter ? pr.base.repo.full_name === repositoryFilter : true))
-    .reduce((prev, curr) => {
-      const username = curr.user.login
-      return { ...prev, [username]: (prev[username] || 0) + 1 }
-    }, {})
-
-  const userRepositoryContributes = filteredPullRequests
-    .filter((pr) => (userFilter ? pr.user.login === userFilter : true))
-    .reduce((prev, curr) => {
-      const repository = curr.base.repo.full_name
-      return { ...prev, [repository]: (prev[repository] || 0) + 1 }
-    }, {})
-
-  const repoContributersChartData = Object.keys(repositoryContributers).map((username) => ({
-    browser: username,
-    visitors: repositoryContributers[username],
-    fill: `hsl(${stringToHue(username)}, 70%, 50%)`
-  }))
-
-  const userRepoContributesChartData = Object.keys(userRepositoryContributes).map((repository) => ({
-    browser: repository,
-    visitors: userRepositoryContributes[repository],
-    fill: `hsl(${stringToHue(repository)}, 70%, 50%)`
-  }))
-
-  const chartConfig = {
-    visitors: {
-      label: 'Visitors'
-    }
-  } satisfies ChartConfig
-
-  const totalPullRequestCount = useMemo(() => {
-    return repoContributersChartData.reduce((acc, curr) => acc + curr.visitors, 0)
-  }, [repoContributersChartData])
-
-  const totalUserRepoContributesPullRequestCount = useMemo(() => {
-    return userRepoContributesChartData.reduce((acc, curr) => acc + curr.visitors, 0)
-  }, [userRepoContributesChartData])
+  const chartData = userFilter
+    ? toChartData(contributorsByRepo)
+    : toChartData(contributorsByUser)
 
   if (!setting) {
     return <>setting not found</>
@@ -145,141 +65,28 @@ export const PullRequestsAllPage = () => {
             <CardDescription>TOTAL PULL Requests: {filteredPullRequests.length}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div>
-              <Cal data={heatmapData} />
-            </div>
+            <Cal data={heatmapData} />
           </CardContent>
         </Card>
       </div>
 
-      <div className="mb-4">
-        {Object.keys(mmm).map((username) => (
-          <Badge key={username} variant="outline" className="mr-1" onClick={() => {}}>
-            {username}
-          </Badge>
-        ))}
-      </div>
+      <PrUserFilter
+        users={users}
+        activeUser={userFilter}
+        onSelectUser={(username) => {
+          setUserFilter(username)
+          setRepositoryFilter(null)
+        }}
+        onReset={() => {
+          setUserFilter(null)
+          setRepositoryFilter(null)
+        }}
+      />
 
-      <div className="mb-4">
-        {Object.keys(users).map((username) => (
-          <Badge
-            key={username}
-            variant="outline"
-            className="mr-1"
-            onClick={() => {
-              setUserFilter(username)
-              setRepositoryFilter(null)
-            }}
-          >
-            @{username} ({users[username]['open'] || 0}/{users[username]['closed'] || 0})
-          </Badge>
-        ))}
-      </div>
-      <div className="mb-4">
-        <Button
-          size="sm"
-          onClick={() => {
-            setUserFilter(null)
-            setRepositoryFilter(null)
-          }}
-        >
-          reset user filter
-        </Button>
-      </div>
       <div>TOTAL: {filteredPullRequests.length}</div>
+      {userFilter && <div>USER_FILTER: {userFilter}</div>}
 
-      {userFilter ? (
-        <>
-          <div>USER_FILTER: {userFilter}</div>
-          <ChartContainer config={chartConfig} className="aspect-square max-h-[250px]">
-            <PieChart>
-              <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-              <Pie
-                data={userRepoContributesChartData}
-                dataKey="visitors"
-                nameKey="browser"
-                innerRadius={60}
-                strokeWidth={5}
-              >
-                <Label
-                  content={({ viewBox }) => {
-                    if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
-                      return (
-                        <text
-                          x={viewBox.cx}
-                          y={viewBox.cy}
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                        >
-                          <tspan
-                            x={viewBox.cx}
-                            y={viewBox.cy}
-                            className="text-3xl font-bold fill-foreground"
-                          >
-                            {totalUserRepoContributesPullRequestCount.toLocaleString()}
-                          </tspan>
-                          <tspan
-                            x={viewBox.cx}
-                            y={(viewBox.cy || 0) + 24}
-                            className="fill-muted-foreground"
-                          >
-                            Pull Requests
-                          </tspan>
-                        </text>
-                      )
-                    }
-                    return null
-                  }}
-                />
-              </Pie>
-            </PieChart>
-          </ChartContainer>
-        </>
-      ) : (
-        <ChartContainer config={chartConfig} className="aspect-square max-h-[250px]">
-          <PieChart>
-            <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-            <Pie
-              data={repoContributersChartData}
-              dataKey="visitors"
-              nameKey="browser"
-              innerRadius={60}
-              strokeWidth={5}
-            >
-              <Label
-                content={({ viewBox }) => {
-                  if (viewBox && 'cx' in viewBox && 'cy' in viewBox) {
-                    return (
-                      <text
-                        x={viewBox.cx}
-                        y={viewBox.cy}
-                        textAnchor="middle"
-                        dominantBaseline="middle"
-                      >
-                        <tspan
-                          x={viewBox.cx}
-                          y={viewBox.cy}
-                          className="text-3xl font-bold fill-foreground"
-                        >
-                          {totalPullRequestCount.toLocaleString()}
-                        </tspan>
-                        <tspan
-                          x={viewBox.cx}
-                          y={(viewBox.cy || 0) + 24}
-                          className="fill-muted-foreground"
-                        >
-                          Pull Requests
-                        </tspan>
-                      </text>
-                    )
-                  }
-                  return null
-                }}
-              />
-            </Pie>
-          </PieChart>
-        </ChartContainer>
-      )}
+      <PrContributionChart data={chartData} label="Pull Requests" />
 
       <div>
         {repositoryFilter && (
@@ -295,9 +102,9 @@ export const PullRequestsAllPage = () => {
 
         {!userFilter && repositoryFilter && (
           <ul>
-            {Object.keys(repositoryContributers).map((username) => (
+            {Object.keys(contributorsByUser).map((username) => (
               <li key={username}>
-                {username}: {repositoryContributers[username]}
+                {username}: {contributorsByUser[username]}
               </li>
             ))}
           </ul>
@@ -311,7 +118,7 @@ export const PullRequestsAllPage = () => {
         </TabsList>
         <TabsContent value="repositories">
           <div className="flex flex-wrap">
-            {[...respositoryPullRequestsCount.keys()].map((repo) => (
+            {[...repositoryPrCount.keys()].map((repo) => (
               <Card key={repo} className="mb-2 mr-2">
                 <CardHeader>
                   <CardTitle>
@@ -326,17 +133,15 @@ export const PullRequestsAllPage = () => {
                     </a>
                   </CardTitle>
                   <CardDescription>
-                    PULL Requests: ({respositoryPullRequestsCount.get(repo)})
+                    PULL Requests: ({repositoryPrCount.get(repo)})
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div>
-                    <RepoHeatmap
-                      data={pullRequests}
-                      repository={repo}
-                      userIds={userFilter ? [userFilter] : []}
-                    />
-                  </div>
+                  <RepoHeatmap
+                    data={pullRequests}
+                    repository={repo}
+                    userIds={userFilter ? [userFilter] : []}
+                  />
                 </CardContent>
               </Card>
             ))}
@@ -344,10 +149,7 @@ export const PullRequestsAllPage = () => {
         </TabsContent>
         <TabsContent value="pull-requests">
           <div>
-            {[...filteredPullRequests]
-              .filter((repo) =>
-                repositoryFilter ? repo.base.repo.full_name === repositoryFilter : true
-              )
+            {[...filteredByRepo]
               .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))
               .map((pull) => (
                 <div
