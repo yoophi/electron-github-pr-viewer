@@ -6,9 +6,11 @@ type RepoHeatmapProps = {
   data?: PullRequest[]
   userIds?: string[]
   repository?: string
+  startDate?: Date
+  endDate?: Date
 }
 
-export const RepoHeatmap = ({ data, userIds, repository }: RepoHeatmapProps) => {
+export const RepoHeatmap = ({ data, userIds, repository, startDate, endDate }: RepoHeatmapProps) => {
   if (data === undefined) {
     return 'data is empty'
   }
@@ -38,5 +40,5 @@ export const RepoHeatmap = ({ data, userIds, repository }: RepoHeatmapProps) => 
     value: pullRequestsCount.get(key)
   }))
 
-  return <Cal data={heatmapData} />
+  return <Cal data={heatmapData} startDate={startDate} endDate={endDate} />
 }

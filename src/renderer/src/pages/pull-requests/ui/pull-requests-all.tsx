@@ -111,7 +111,7 @@ export const PullRequestsAllPage = () => {
             <CardDescription>TOTAL PULL Requests: {filteredPullRequests.length}</CardDescription>
           </CardHeader>
           <CardContent>
-            <Cal data={heatmapData} />
+            <Cal data={heatmapData} startDate={dateRange.from} endDate={dateRange.to} />
           </CardContent>
         </Card>
       </div>
@@ -186,6 +186,8 @@ export const PullRequestsAllPage = () => {
                     data={pullRequests}
                     repository={repo}
                     userIds={userFilter ? [userFilter] : []}
+                    startDate={dateRange.from}
+                    endDate={dateRange.to}
                   />
                 </CardContent>
               </Card>
