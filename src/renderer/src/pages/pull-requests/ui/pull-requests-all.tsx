@@ -39,10 +39,11 @@ export const PullRequestsAllPage = () => {
   const { pullRequests: allPullRequests } = queryStatus
 
   const pullRequests = useMemo(() => {
-    const fromDate = dateRange.from.toLocaleDateString('sv-SE') // YYYY-MM-DD (KST)
+    const fromDate = dateRange.from.toLocaleDateString('sv-SE')
     const toDate = dateRange.to.toLocaleDateString('sv-SE')
     return allPullRequests.filter((pr) => {
-      const createdDate = new Date(pr.created_at).toLocaleDateString('sv-SE')
+      // pr.created_at은 UTC ISO 문자열 — UTC 날짜 기준으로 비교 (GitHub UI 표시 기준)
+      const createdDate = pr.created_at.slice(0, 10) // "2025-12-31T15:00:00Z" → "2025-12-31"
       return createdDate >= fromDate && createdDate <= toDate
     })
   }, [allPullRequests, dateRange])
