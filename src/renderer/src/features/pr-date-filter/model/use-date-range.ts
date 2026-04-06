@@ -17,7 +17,10 @@ export function useDateRange(initial?: DateRange) {
   }
 
   const setCustomRange = (range: DateRange) => {
-    setDateRange(range)
+    // from은 startOfDay, to는 endOfDay로 정규화
+    const from = new Date(range.from.getFullYear(), range.from.getMonth(), range.from.getDate(), 0, 0, 0, 0)
+    const to = new Date(range.to.getFullYear(), range.to.getMonth(), range.to.getDate(), 23, 59, 59, 999)
+    setDateRange({ from, to })
     setActivePreset(null)
   }
 

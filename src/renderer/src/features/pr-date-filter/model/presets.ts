@@ -1,35 +1,43 @@
 import type { DatePreset } from './types'
 
-const today = () => new Date()
-const startOfYear = (year: number) => new Date(year, 0, 1)
-const endOfYear = (year: number) => new Date(year, 11, 31)
+function today(): Date {
+  return new Date()
+}
+
+function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 0, 0, 0, 0)
+}
+
+function endOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999)
+}
 
 export const datePresets: DatePreset[] = [
   {
     label: '올해 1Q',
     range: () => {
       const year = today().getFullYear()
-      return { from: new Date(year, 0, 1), to: new Date(year, 2, 31) }
+      return { from: new Date(year, 0, 1), to: endOfDay(new Date(year, 2, 31)) }
     }
   },
   {
     label: '올해 2Q',
     range: () => {
       const year = today().getFullYear()
-      return { from: new Date(year, 3, 1), to: new Date(year, 5, 30) }
+      return { from: new Date(year, 3, 1), to: endOfDay(new Date(year, 5, 30)) }
     }
   },
   {
     label: '올해',
     range: () => {
-      return { from: startOfYear(today().getFullYear()), to: today() }
+      return { from: new Date(today().getFullYear(), 0, 1), to: endOfDay(today()) }
     }
   },
   {
     label: '작년',
     range: () => {
       const lastYear = today().getFullYear() - 1
-      return { from: startOfYear(lastYear), to: endOfYear(lastYear) }
+      return { from: new Date(lastYear, 0, 1), to: endOfDay(new Date(lastYear, 11, 31)) }
     }
   },
   {
@@ -38,7 +46,7 @@ export const datePresets: DatePreset[] = [
       const now = today()
       const oneYearAgo = new Date(now)
       oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1)
-      return { from: oneYearAgo, to: now }
+      return { from: startOfDay(oneYearAgo), to: endOfDay(now) }
     }
   },
   {
@@ -47,7 +55,7 @@ export const datePresets: DatePreset[] = [
       const now = today()
       const oneMonthAgo = new Date(now)
       oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1)
-      return { from: oneMonthAgo, to: now }
+      return { from: startOfDay(oneMonthAgo), to: endOfDay(now) }
     }
   }
 ]
