@@ -25,9 +25,6 @@ export function Cal({ data, startDate, endDate }: CalProps) {
       }
 
       const cal = new CalHeatmap()
-      const start = startDate ?? new Date(new Date().setFullYear(new Date().getFullYear() - 1))
-      const end = endDate ?? new Date()
-      const monthRange = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1
 
       await cal.paint(
         {
@@ -40,7 +37,7 @@ export function Cal({ data, startDate, endDate }: CalProps) {
             x: 'date',
             y: 'value'
           },
-          range: Math.max(monthRange, 1),
+          range: 12,
           scale: {
             color: {
               type: 'quantize',
