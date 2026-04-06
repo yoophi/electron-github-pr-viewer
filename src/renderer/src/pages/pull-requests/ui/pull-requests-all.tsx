@@ -15,6 +15,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Link } from 'lucide-react'
 import { Label, Pie, PieChart } from 'recharts'
 
+function stringToHue(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  return Math.abs(hash) % 360
+}
+
 export const PullRequestsAllPage = () => {
   const { setting, members } = useSettingStore((state) => state)
   const [userFilter, setUserFilter] = useState<string | null>()
@@ -114,26 +122,16 @@ export const PullRequestsAllPage = () => {
       return { ...prev, [repository]: (prev[repository] || 0) + 1 }
     }, {})
 
-  // chart
-
-  // const chartData = [
-  //   { browser: 'chrome', visitors: 275, fill: 'var(--color-chrome)' },
-  //   { browser: 'safari', visitors: 200, fill: 'var(--color-safari)' },
-  //   { browser: 'firefox', visitors: 287, fill: 'var(--color-firefox)' },
-  //   { browser: 'edge', visitors: 173, fill: 'var(--color-edge)' },
-  //   { browser: 'other', visitors: 190, fill: 'var(--color-other)' }
-  // ]
-
   const repoContributersChartData = Object.keys(repositoryContributers).map((username) => ({
     browser: username,
     visitors: repositoryContributers[username],
-    fill: `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`
+    fill: `hsl(${stringToHue(username)}, 70%, 50%)`
   }))
 
   const userRepoContributesChartData = Object.keys(userRepositoryContributes).map((repository) => ({
     browser: repository,
     visitors: userRepositoryContributes[repository],
-    fill: `hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`
+    fill: `hsl(${stringToHue(repository)}, 70%, 50%)`
   }))
 
   const chartConfig = {
