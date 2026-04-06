@@ -18,6 +18,16 @@ function fail<T>(message: string, data: T): IPCResponse<T> {
   return { error: true, message, data }
 }
 
+async function handleWith<T>(fn: () => T | Promise<T>, label: string, fallback: T): Promise<IPCResponse<T>> {
+  try {
+    const data = await fn()
+    return ok(data)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'unknown error'
+    return fail(`${label}: ${message}`, fallback)
+  }
+}
+
 type UseCases = {
   getSettings: GetSettings
   saveSettings: SaveSettings
@@ -26,57 +36,46 @@ type UseCases = {
 }
 
 export function registerIpcHandlers(useCases: UseCases): void {
-  ipcMain.handle('get-settings', () => {
-    try {
-      const data = useCases.getSettings.execute()
-      return ok(data)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'unknown error'
-      return fail(`failed to load settings: ${message}`, {
-        accessToken: '',
-        org: '',
-        repositories: [],
-        members: []
-      })
-    }
-  })
+  ipcMain.handle('get-settings', () =>
+    handleWith(
+      () => useCases.getSettings.execute(),
+      'failed to load settings',
+      { accessToken: '', org: '', repositories: [], members: [] }
+    )
+  )
 
-  ipcMain.handle('write-settings', (_, data) => {
-    try {
-      // DTO → domain 변환 (driving adapter 책임)
-      const domainData = {
-        accessToken: data.accessToken,
-        org: data.org || 'payhereinc',
-        repositories:
-          typeof data.repositories === 'string'
-            ? data.repositories.split(/\s+/).filter(Boolean)
-            : data.repositories
-      }
-      useCases.saveSettings.execute(domainData)
-      return ok(undefined)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'unknown error'
-      return fail(`failed to save settings: ${message}`, undefined)
-    }
-  })
+  ipcMain.handle('write-settings', (_, data) =>
+    handleWith(
+      () => {
+        const domainData = {
+          accessToken: data.accessToken,
+          org: data.org || 'payhereinc',
+          repositories:
+            typeof data.repositories === 'string'
+              ? data.repositories.split(/\s+/).filter(Boolean)
+              : data.repositories
+        }
+        useCases.saveSettings.execute(domainData)
+        return undefined
+      },
+      'failed to save settings',
+      undefined
+    )
+  )
 
-  ipcMain.handle('get-repositories', async (_, params) => {
-    try {
-      const data = await useCases.getRepositories.execute(params)
-      return ok(data)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'unknown error'
-      return fail(`failed to get repositories: ${message}`, [])
-    }
-  })
+  ipcMain.handle('get-repositories', (_, params) =>
+    handleWith(
+      () => useCases.getRepositories.execute(params),
+      'failed to get repositories',
+      []
+    )
+  )
 
-  ipcMain.handle('get-pull-requests', async (_, params) => {
-    try {
-      const data = await useCases.getPullRequests.execute(params)
-      return ok(data)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'unknown error'
-      return fail(`failed to get pull requests: ${message}`, [])
-    }
-  })
+  ipcMain.handle('get-pull-requests', (_, params) =>
+    handleWith(
+      () => useCases.getPullRequests.execute(params),
+      'failed to get pull requests',
+      []
+    )
+  )
 }

@@ -44,10 +44,12 @@ export function aggregateContributors(
   pullRequests: any[],
   groupBy: 'user' | 'repository'
 ): Record<string, number> {
-  return pullRequests.reduce((prev, curr) => {
-    const key = groupBy === 'user' ? curr.user.login : curr.base.repo.full_name
-    return { ...prev, [key]: (prev[key] || 0) + 1 }
-  }, {} as Record<string, number>)
+  const result: Record<string, number> = {}
+  pullRequests.forEach((pull) => {
+    const key = groupBy === 'user' ? pull.user.login : pull.base.repo.full_name
+    result[key] = (result[key] || 0) + 1
+  })
+  return result
 }
 
 export function stringToHue(str: string): number {

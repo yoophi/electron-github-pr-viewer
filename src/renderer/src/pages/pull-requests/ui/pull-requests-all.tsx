@@ -13,7 +13,7 @@ import {
 import { cn } from '@/shared/lib/utils'
 import { Cal } from '@/shared/ui/cal-heatmap'
 import { RepoHeatmap } from '@/shared/ui/repo-heatmap'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -27,29 +27,33 @@ export const PullRequestsAllPage = () => {
   const [repositoryFilter, setRepositoryFilter] = useState<string | null>(null)
 
   const queries = usePullRequests(setting?.repositories ?? [], setting?.accessToken)
-  const pullRequests = flattenQueryResults(queries)
-  const users = aggregateUserStats(pullRequests)
 
-  const filteredPullRequests = userFilter
-    ? pullRequests.filter((pull) => pull.user.login === userFilter)
-    : pullRequests
+  const pullRequests = useMemo(() => flattenQueryResults(queries), [queries])
+  const users = useMemo(() => aggregateUserStats(pullRequests), [pullRequests])
 
-  const repositoryPrCount = aggregateByRepository(filteredPullRequests)
-
-  const filteredByRepo = repositoryFilter
-    ? filteredPullRequests.filter((pr) => pr.base.repo.full_name === repositoryFilter)
-    : filteredPullRequests
-
-  const heatmapData = aggregateByDate(filteredByRepo)
-  const contributorsByUser = aggregateContributors(filteredByRepo, 'user')
-  const contributorsByRepo = aggregateContributors(
-    userFilter ? filteredPullRequests : pullRequests.filter((pr) => (userFilter ? pr.user.login === userFilter : true)),
-    'repository'
+  const filteredPullRequests = useMemo(
+    () => (userFilter ? pullRequests.filter((pull) => pull.user.login === userFilter) : pullRequests),
+    [pullRequests, userFilter]
   )
 
-  const chartData = userFilter
-    ? toChartData(contributorsByRepo)
-    : toChartData(contributorsByUser)
+  const repositoryPrCount = useMemo(() => aggregateByRepository(filteredPullRequests), [filteredPullRequests])
+
+  const filteredByRepo = useMemo(
+    () =>
+      repositoryFilter
+        ? filteredPullRequests.filter((pr) => pr.base.repo.full_name === repositoryFilter)
+        : filteredPullRequests,
+    [filteredPullRequests, repositoryFilter]
+  )
+
+  const heatmapData = useMemo(() => aggregateByDate(filteredByRepo), [filteredByRepo])
+  const contributorsByUser = useMemo(() => aggregateContributors(filteredByRepo, 'user'), [filteredByRepo])
+  const contributorsByRepo = useMemo(() => aggregateContributors(filteredPullRequests, 'repository'), [filteredPullRequests])
+
+  const chartData = useMemo(
+    () => (userFilter ? toChartData(contributorsByRepo) : toChartData(contributorsByUser)),
+    [userFilter, contributorsByRepo, contributorsByUser]
+  )
 
   if (!setting) {
     return <>setting not found</>

@@ -31,7 +31,7 @@ export function SettingsForm({ defaultValues }: { defaultValues: Setting }): JSX
       setSettings({
         accessToken: data.accessToken,
         org: data.org,
-        repositories: data.repositories.split(/\s+/),
+        repositories: data.repositories.split(/\s+/).filter(Boolean),
         members: []
       })
       toast({
